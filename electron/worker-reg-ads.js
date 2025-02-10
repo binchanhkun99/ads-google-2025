@@ -77,7 +77,11 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
             '--disable-dev-shm-usage',
             '--disable-gpu',
             '--disable-popup-blocking',
-            '--disable-translate'
+            '--disable-translate',
+            '--disable-application-cache', // Tắt cache ứng dụng
+            '--disable-cache', // Tắt cache
+            '--disk-cache-size=0', // Đặt kích thước cache trên ổ đĩa về 0
+            '--media-cache-size=0' // Đặt kích thước cache media về 0
         );
 
         const service = new chrome.ServiceBuilder(driverPath);
@@ -394,7 +398,7 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
         await driver.sleep(5000);
 
         // const elementIframeModal = await driver.findElement(By.xpath("//div[@data-label='Profile type']//div[contains(@jsaction, 'click:')]"));
-        const elementIframeModal = await driver.findElement(By.xpath("//div[contains(@class, 'VfPpkd-TkwUic')]"));
+        const elementIframeModal = await driver.findElement(By.xpath("//input[@autocomplete='organization']"));
         await driver.sleep(2000);
         await driver.executeScript("arguments[0].focus();", elementIframeModal);
 
@@ -408,16 +412,19 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
         await elementIframeModal.click();
 
 
-// Chờ sau khi click
         await driver.sleep(2000);
 
 
         try {
-            const xpathProfileType = `//li[.//span[normalize-space(text())='${formData.exampleProfileType}']]`;
-            const btnProfileType = await driver.findElement(By.xpath(xpathProfileType));
-            await driver.executeScript("arguments[0].click();", btnProfileType);
+            const checkProfilType = await waitForElementOrTimeoutReg(driver, `//li[.//span[normalize-space(text())='${formData.exampleProfileType}']]`, 1000, 4000)
+            if (checkProfilType) {
+                const xpathProfileType = `//li[.//span[normalize-space(text())='${formData.exampleProfileType}']]`;
+                const btnProfileType = await driver.findElement(By.xpath(xpathProfileType));
+                await driver.executeScript("arguments[0].click();", btnProfileType);
 
-            await driver.sleep(2000);
+                await driver.sleep(2000);
+            }
+
 
             //-------------------Nhập tên doanh nghiệp--------------------------------
 
@@ -913,7 +920,7 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
             }
 
             const tabs = await driver.getAllWindowHandles();
-            await driver.switchTo().window(tabs[1]);
+            await driver.switchTo().window(tabs[2]);
 
             const xpathContinuePass = '/html/body/div[1]/root/div/advertiser-identity-view-loader/identity-invitation-view/div/div/intro-card/div[1]/div[1]/div/div[2]/material-button[1]';
             await waitForElementOrTimeoutReg(driver, xpathContinuePass, 1000, 20000);
@@ -981,7 +988,28 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
 async function mainProcess(driver, formData, updateStatus) {
     // Bước bắt đầu: Truy cập vào trang
     await driver.get("https://ads.google.com/nav/selectaccount");
-    await driver.sleep(1000);
+    await driver.sleep(2500)
+    // Lấy handle của tab hiện tại
+    let originalTab = await driver.getWindowHandle();
+
+    // Mở một tab mới
+    await driver.switchTo().newWindow('tab');
+
+    // Mở một trang web khác trong tab mới
+    await driver.get('https://accounts.google.com/');
+
+    // Lấy danh sách tất cả các tab đang mở
+    let handles = await driver.getAllWindowHandles();
+
+    // Chuyển về tab cũ
+    await driver.switchTo().window(originalTab);
+
+    // Đóng tab cũ
+    await driver.close();
+
+    // Chuyển về tab mới (tab còn lại)
+    await driver.switchTo().window(handles[1]);
+    await driver.sleep(2000)
     // Đặt cookie AdsUserLocale với giá trị 'en' (tiếng Anh)
     await driver.manage().addCookie({
         name: 'AdsUserLocale',

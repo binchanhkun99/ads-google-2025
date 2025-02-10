@@ -104,6 +104,14 @@ const wantVerifyToday = [
   {label: 'My agency', value: 'My agency'},
   {label: 'A client', value: 'A client'},
 ];
+const exampleYourOwnBusinessLimit = [
+  {label: 'Yes', value: 'Yes'},
+  {label: 'No', value: 'No'},
+];
+const examplePrimaryPaymentMethodLimit = [
+  {label: 'Yes', value: 'Yes'},
+  {label: 'No', value: 'No'},
+];
 const agencyPayFor = [
   {label: 'Yes, we pay for this account', value: 'Yes, we pay for this account'},
   {label: 'No, our client pays for this account', value: 'No, our client pays for this account'},
@@ -137,6 +145,26 @@ const formData = ref({
   exampleTimeConnect: '',
   exampleProblemSummary: '',
 });
+
+const formDataLimit = ref({
+  exampleCompanyNameLimit: '',
+  examplePrefixPhoneNumberLimit: '',
+  examplePhoneNumberLimit: '',
+  exampleWebsiteLimit: '',
+  exampleAddressLimit: '',
+  exampleZipCodeLimit: '',
+  exampleCityLimit: '',
+  exampleBillingCountryLimit: '',
+  exampleYourOwnBusinessLimit: '',
+  examplePrimaryPaymentMethodLimit: '',
+  exampleDatePaymentMethodLimit: '',
+  exampleBusinessServeLimit: '',
+  exampleDescriptionBusinessLimit: '',
+  exampleJustificationLimit: '',
+  exampleProblemSummaryLimit: '',
+  exampleLinkImageLimit: ''
+});
+
 const formDataReg = ref({
   exampleWebsite: '',
   exampleBillingCountry: '',
@@ -216,6 +244,7 @@ const setupReg = async () => {
   }
   isLoading.value = false;
 }
+
 const setup = async () => {
   isLoading.value = true;
   const result = await window.electronAPI.invokeReadFile();
@@ -248,6 +277,36 @@ const setup = async () => {
   }
   isLoading.value = false;
 };
+const setupAppealLimit = async () => {
+  isLoading.value = true;
+  activeTab.value = 'tab3'
+
+  const result = await window.electronAPI.invokeReadFileLimit();
+  isPopupOpen.value = true;
+  if (result) {
+    const lines = result.split("\n");
+    formDataLimit.value = {
+      exampleCompanyNameLimit: lines[0] || '',
+      examplePrefixPhoneNumberLimit: lines[1] || '',
+      examplePhoneNumberLimit: lines[2] || '',
+      exampleWebsiteLimit: lines[3] || '',
+      exampleAddressLimit: lines[4] || '',
+      exampleZipCodeLimit: lines[5] || '',
+      exampleCityLimit: lines[6] || '',
+      exampleBillingCountryLimit: lines[7] || '',
+      exampleYourOwnBusinessLimit: lines[8] || '',
+      examplePrimaryPaymentMethodLimit: lines[9] || '',
+      exampleDatePaymentMethodLimit: lines[10] || '',
+      exampleBusinessServeLimit: lines[11] || '',
+      exampleDescriptionBusinessLimit: lines[12] || '',
+      exampleJustificationLimit: lines[13] || '',
+      exampleProblemSummaryLimit: lines[14] || '',
+      exampleLinkImageLimit: lines[15] || ''
+
+    };
+  }
+  isLoading.value = false;
+};
 
 const saveData = async () => {
   isPopupOpen.value = true;
@@ -264,6 +323,17 @@ const saveDataReg = async () => {
   isPopupOpen.value = true;
   const dataToSave = Object.values(formDataReg.value).join("\n");
   await window.electronAPI.invokeSaveFileReg(dataToSave);
+  isPopupOpen.value = false;
+  notify({
+    type: 'success',
+    title: "Thành công",
+    text: "Lưu file setup thành công"
+  });
+};
+const saveDataLimit = async () => {
+  isPopupOpen.value = true;
+  const dataToSave = Object.values(formDataReg.value).join("\n");
+  await window.electronAPI.invokeSaveFileLimit(dataToSave);
   isPopupOpen.value = false;
   notify({
     type: 'success',
@@ -455,6 +525,7 @@ async function openMultipleProfile() {
   }
 }
 
+
 async function checkLive() {
   const selectedAccounts = dataProfile.value.filter(item => item.selected);
   if (selectedAccounts.length <= 0) {
@@ -547,7 +618,7 @@ const updateSelectAll = () => {
 };
 // ----------------------REG ADS ACC
 
-const regAds = async () => {
+const appealLimitAds = async () => {
   const selectedAccounts = dataProfile.value.filter(item => item.selected);
   if (selectedAccounts.length <= 0) {
     notify({
@@ -559,7 +630,7 @@ const regAds = async () => {
 
   }
   const dataJSON = JSON.stringify(selectedAccounts);
-  await window.electronAPI.regAdsSelenium(dataJSON, numberThreads.value, apiUrl.value);
+  await window.electronAPI.adsLimitAppeal(dataJSON, numberThreads.value, apiUrl.value);
 
 
 }
@@ -603,6 +674,8 @@ onUnmounted(() => {
         <button class="p-4" @click="showPopup=true">Tạo Profile</button>
         <!--        @click="processFile"-->
         <button class="button-85" @click="submitSelected" role="button">Chạy kháng</button>
+        <button class="button-85" @click="appealLimitAds" role="button">Kháng limit 2$</button>
+
         <button class="p-4" style="background-color: #0ab50b; color: #ffffff" @click="checkLive">Check Live</button>
 <!--        <button class="button-85" @click="regAds" role="button">Chạy Reg</button>-->
         <button class="button-85" @click="openPopup" role="button">Chạy Reg</button>
@@ -882,6 +955,14 @@ onUnmounted(() => {
           >
             Setup Reg
           </button>
+          <button
+              class="w-1/2 text-center flex justify-center font-semibold"
+              style="border-radius: 0 !important;"
+              :class="{ active: activeTab === 'tab3' }"
+              @click="setupAppealLimit"
+          >
+            Setup kháng limit
+          </button>
         </div>
 
         <!-- Tab 1 Content -->
@@ -1115,6 +1196,100 @@ onUnmounted(() => {
             <button class="p-4" @click="isPopupOpen = false">Đóng</button>
             <button class="p-4" @click="saveDataReg" style="border: 1.5px solid #00a200;">Lưu</button>
           </div>
+        </div>
+        <div v-if="activeTab === 'tab3'" class="tab-content">
+          <!-- Input Fields -->
+          <div class="form-group">
+            <label>Tên công ty:</label>
+            <input type="text" placeholder="VD: Ovantin Company" v-model="formDataLimit.exampleCompanyNameLimit"/>
+          </div>
+          <div class="form-group" style="display: flex; gap: 6px">
+            <div>
+              <label>Đầu số:</label>
+              <input v-model="formDataLimit.examplePrefixPhoneNumberLimit"/>
+            </div>
+            <div>
+              <label>SĐT:</label>
+              <input placeholder="VD: 983763541" v-model="formDataLimit.examplePhoneNumberLimit"/>
+            </div>
+
+          </div>
+
+          <div class="form-group">
+            <label>Trang web:</label>
+            <input placeholder="VD: https://hola.com.vn" v-model="formDataLimit.exampleWebsiteLimit"/>
+          </div>
+
+          <div class="form-group">
+            <label>Địa chỉ:</label>
+            <input placeholder="VD: Ngan Ha Strict" type="text" v-model="formDataLimit.exampleAddressLimit"/>
+          </div>
+
+          <div class="form-group">
+            <label>Zip Code:</label>
+            <input placeholder="VD: 400001" v-model="formDataLimit.exampleZipCodeLimit"/>
+          </div>
+
+          <div class="form-group">
+            <label>Thành phố:</label>
+            <input placeholder="VD: Hà Nội" v-model="formDataLimit.exampleCityLimit"/>
+          </div>
+          <div class="form-group">
+            <label>Quốc gia thanh toán:</label>
+            <input placeholder="VD: Vietnam" v-model="formDataLimit.exampleBillingCountryLimit"/>
+          </div>
+
+          <div class="form-group" >
+            <label>Bạn có đang quảng cáo doanh nghiệp của riêng bạn không?</label>
+            <select id="priceSelect" v-model="formDataLimit.exampleYourOwnBusinessLimit">
+              <option v-for="agency in exampleYourOwnBusinessLimit" :key="agency.value" :value="agency.value">
+                {{ agency.label }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group" >
+            <label>Tên bạn có liên kết với phương thức thanh toán chính cho tài khoản này không?</label>
+            <select id="priceSelect" v-model="formDataLimit.examplePrimaryPaymentMethodLimit">
+              <option v-for="agency in examplePrimaryPaymentMethodLimit" :key="agency.value" :value="agency.value">
+                {{ agency.label }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Ngày thanh toán cuối cùng
+            </label>
+            <input  placeholder="VD: 1" v-model="formDataLimit.exampleDatePaymentMethodLimit"/>
+          </div>
+          <div class="form-group">
+            <label>Doanh nghiệp của bạn phục vụ những quốc gia nào?
+            </label>
+            <input  placeholder="VD: 1" v-model="formDataLimit.exampleBusinessServeLimit"/>
+          </div>
+          <div class="form-group">
+            <label>Cung cấp mô tả ngắn gọn về doanh nghiệp của bạn  </label>
+            <textarea placeholder="VD: Mô tả" v-model="formDataLimit.exampleDescriptionBusinessLimit"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Cung cấp giải thích ngắn gọn cho lý do bạn cần tăng hạn mức chi tiêu hàng ngày của tài khoản
+            </label>
+            <textarea placeholder="VD: Lí do A" v-model="formDataLimit.exampleJustificationLimit"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Đường dẫn ảnh
+            </label>
+            <input placeholder="C://" v-model="formDataLimit.exampleLinkImageLimit"></input>
+          </div>
+
+
+          <div class="form-group">
+            <label>Tóm tắt vấn đề :</label>
+            <textarea placeholder="VD: Vấn đề là..." type="text" v-model="formData.exampleProblemSummary"/>
+          </div>
+          <div class="buttons">
+            <button class="p-4" @click="isPopupOpen = false">Đóng</button>
+            <button class="p-4" @click="saveData" style="border: 1.5px solid #00a200;">Lưu</button>
+          </div>
+
         </div>
 
         <!-- Buttons -->

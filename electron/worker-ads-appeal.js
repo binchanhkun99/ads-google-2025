@@ -80,7 +80,11 @@ async function processAppeal(driverPath, remoteDebuggingAddress, profileId, user
             '--disable-dev-shm-usage',
             '--disable-gpu',
             '--disable-popup-blocking',
-            '--disable-translate'
+            '--disable-translate',
+            '--disable-application-cache', // Tắt cache ứng dụng
+            '--disable-cache', // Tắt cache
+            '--disk-cache-size=0', // Đặt kích thước cache trên ổ đĩa về 0
+            '--media-cache-size=0' // Đặt kích thước cache media về 0
         );
 
         const service = new chrome.ServiceBuilder(driverPath);
@@ -91,7 +95,29 @@ async function processAppeal(driverPath, remoteDebuggingAddress, profileId, user
             .build();
 
         await driver.get("https://ads.google.com/nav/selectaccount");
-        await driver.sleep(5000);
+        await driver.sleep(1500);
+        // Lấy handle của tab hiện tại
+        let originalTab = await driver.getWindowHandle();
+
+        // Mở một tab mới
+        await driver.switchTo().newWindow('tab');
+
+        // Mở một trang web khác trong tab mới
+        await driver.get("https://ads.google.com/nav/selectaccount");
+
+        // Lấy danh sách tất cả các tab đang mở
+        let handles = await driver.getAllWindowHandles();
+
+        // Chuyển về tab cũ
+        await driver.switchTo().window(originalTab);
+
+        // Đóng tab cũ
+        await driver.close();
+
+        // Chuyển về tab mới (tab còn lại)
+        await driver.switchTo().window(handles[1]);
+        await driver.sleep(2000)
+
         const ElmListAccount = await driver.findElements(By.xpath('//material-list-item[contains(@class, "user-customer-list-item")]'));
         let listAccountBanned = [];
         if (ElmListAccount.length <= 0) {
@@ -436,6 +462,13 @@ async function processAppeal(driverPath, remoteDebuggingAddress, profileId, user
                 const inputTimeConnect = await driver.wait(until.elementLocated(By.xpath("/html/body/div[2]/div/section/div/div/article/form/div[30]//input")), waitTime);
                 await enterTextIntoInput(driver, inputTimeConnect, formData.exampleTimeConnect);
                 await driver.sleep(1500);
+            }else if(formData.exampleSelectConnect === 3){
+                //-------------------Nếu là Email me-------------------------
+
+                const xpathEmailMe = "//div[contains(@class, 'material-radio')]/input[@aria-label='Email me']"
+                const btnEmailMe = await driver.findElement(By.xpath(xpathEmailMe));
+                await driver.executeScript("arguments[0].click();", btnEmailMe);
+                await driver.sleep(2000);
             }
 
             //-------------------Nhập tóm tắt vấn đề-------------------------

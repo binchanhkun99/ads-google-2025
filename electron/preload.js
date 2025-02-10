@@ -5,6 +5,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     importFile: () => ipcRenderer.invoke('import-file'),
     invokeReadFile: () => ipcRenderer.invoke('read-file'),
 
+    invokeReadFileLimit: () => ipcRenderer.invoke('read-file-limit'),
+    invokeSaveFileLimit: (data) => ipcRenderer.invoke('save-file-limit', data),
+
     invokeReadFileReg: () => ipcRenderer.invoke('read-file-reg'),
     invokeSaveFileReg: (data) => ipcRenderer.invoke('save-file-reg', data),
 
@@ -26,6 +29,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.removeListener(channel, callback);
     },
     adsAppeal: (dataJSON, numberThreads, apiUrl) => ipcRenderer.invoke('ads-appeal', dataJSON, numberThreads, apiUrl),
+    adsLimitAppeal: (dataJSON, numberThreads, apiUrl) => ipcRenderer.invoke('ads-limit-appeal', dataJSON, numberThreads, apiUrl),
+
     regAdsSelenium: (dataJSON, numberThreads, apiUrl) => ipcRenderer.invoke('ads-reg', dataJSON, numberThreads, apiUrl),
     onlyReg: (dataJSON, numberThreads, apiUrl) => ipcRenderer.invoke('only-reg', dataJSON, numberThreads, apiUrl),
     onlyVerify: (dataJSON, numberThreads, apiUrl) => ipcRenderer.invoke('only-verify', dataJSON, numberThreads, apiUrl),

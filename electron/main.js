@@ -142,6 +142,45 @@ Rất nhiều vấn đề`;
     }
 });
 
+ipcMain.handle('read-file-limit', async () => {
+    const filePath = path.join(__dirname, 'setup-limit.txt'); // Tên file mới nếu chưa tồn tại
+    const defaultData = `CTY LIFETECH JSC
+84
+983383863
+https://example.com
+Mạc Đĩnh chi Strict
+40051
+Ho Chi Minh City
+Vietnam
+Yes
+Yes
+21/07/2024
+Vietnam, United State
+Mô tả về doanh nghiệp
+Giải thích về chi tiêu
+Rất nhiều vấn đề
+C:\\Users\\ADMIN\\Pictures\\image_test_khang_limit_2dollar.png
+84
+983383863
+Trong tháng
+Rất nhiều vấn đề`;
+
+    try {
+        // Kiểm tra nếu file không tồn tại
+        if (!fs.existsSync(filePath)) {
+            // Tạo file mới với dữ liệu mặc định
+            fs.writeFileSync(filePath, defaultData, 'utf-8');
+            console.log(`File ${filePath} đã được tạo.`);
+        }
+
+        // Đọc nội dung file
+        const dataSetup = fs.readFileSync(filePath, 'utf-8');
+        return dataSetup;
+    } catch (error) {
+        console.error('Lỗi xử lý file:', error);
+        return null;
+    }
+});
 
 ipcMain.handle('read-file-reg', async () => {
     const filePath = path.join(__dirname, 'setup-reg.txt'); // Tên file mới nếu chưa tồn tại
@@ -199,6 +238,18 @@ ipcMain.handle('save-file', async (event, data) => {
 // ---------------------LƯU FILE REG
 ipcMain.handle('save-file-reg', async (event, data) => {
     const filePath = path.join(__dirname, 'setup-reg.txt');
+    try {
+        fs.writeFileSync(filePath, data, 'utf-8');
+        console.log(`File ${filePath} đã được cập nhật.`);
+        return true;
+    } catch (error) {
+        console.error('Lỗi ghi file:', error);
+        return false;
+    }
+});
+// ---------------------LƯU FILE KHÁNG LIMIT
+ipcMain.handle('save-file-limit', async (event, data) => {
+    const filePath = path.join(__dirname, 'setup-limit.txt');
     try {
         fs.writeFileSync(filePath, data, 'utf-8');
         console.log(`File ${filePath} đã được cập nhật.`);
@@ -529,6 +580,72 @@ ipcMain.handle('ads-appeal', async (event, dataJSON, numberThreads, apiUrl) => {
     // Tạo danh sách tasks cho worker
     const tasks = items.map((item, index) => () => new Promise((resolve, reject) => {
         const worker = new Worker(path.join(__dirname, 'worker-ads-appeal.js'), {
+            workerData: {
+                item, apiUrl,
+                winPos: windowPositions[index % MAX_CONCURRENT_WORKERS] // Truyền vị trí vào worker
+            }
+        });
+
+        worker.on('message', (result) => {
+            event.sender.send('update-profile-data');
+            resolve(result);
+        });
+
+        worker.on('error', (error) => {
+            console.error(`Worker error: ${error.message}`);
+            reject(error);
+        });
+
+        worker.on('exit', (code) => {
+            if (code !== 0) {
+                console.error(`Worker stopped with exit code ${code}`);
+                reject(new Error(`Worker stopped with exit code ${code}`));
+            }
+        });
+    }));
+
+    try {
+        const results = await workerQueue(tasks, MAX_CONCURRENT_WORKERS);
+        // Trả về kết quả từ tất cả các worker
+        return {success: true, results};
+    } catch (error) {
+        console.error('Error during worker execution:', error);
+        return {success: false, error: error.message};
+    }
+});
+ipcMain.handle('ads-limit-appeal', async (event, dataJSON, numberThreads, apiUrl) => {
+    const items = JSON.parse(dataJSON);
+    const MAX_CONCURRENT_WORKERS = numberThreads || 5; // Mặc định 5 luồng nếu không truyền `numberThreads`
+    const windowPositions = calculateWindowPositions(MAX_CONCURRENT_WORKERS);
+    const workerQueue = async (tasks, maxConcurrent) => {
+        const results = [];
+        const executing = [];
+
+        for (const task of tasks) {
+            const promise = task()
+                .then(result => {
+                    results.push(result);
+                    executing.splice(executing.indexOf(promise), 1);
+                })
+                .catch(error => {
+                    results.push({success: false, error: error.message});
+                    executing.splice(executing.indexOf(promise), 1);
+                });
+
+            executing.push(promise);
+
+            if (executing.length >= maxConcurrent) {
+                await Promise.race(executing); // Đợi một promise hoàn thành
+            }
+        }
+
+        await Promise.all(executing); // Chờ tất cả các promise còn lại hoàn thành
+        return results;
+    };
+
+    // Tạo danh sách tasks cho worker
+    const tasks = items.map((item, index) => () => new Promise((resolve, reject) => {
+        const worker = new Worker(path.join(__dirname, 'worker-ads-limit-appeal.js'), {
             workerData: {
                 item, apiUrl,
                 winPos: windowPositions[index % MAX_CONCURRENT_WORKERS] // Truyền vị trí vào worker
