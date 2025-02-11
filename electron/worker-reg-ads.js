@@ -394,7 +394,7 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
         await driver.sleep(5000);
 
         // const elementIframeModal = await driver.findElement(By.xpath("//div[@data-label='Profile type']//div[contains(@jsaction, 'click:')]"));
-        const elementIframeModal = await driver.findElement(By.xpath("//div[contains(@class, 'VfPpkd-TkwUic')]"));
+        const elementIframeModal = await driver.findElement(By.xpath("//input[@autocomplete='organization']"));
         await driver.sleep(2000);
         await driver.executeScript("arguments[0].focus();", elementIframeModal);
 
@@ -408,16 +408,19 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
         await elementIframeModal.click();
 
 
-// Chờ sau khi click
         await driver.sleep(2000);
 
 
         try {
-            const xpathProfileType = `//li[.//span[normalize-space(text())='${formData.exampleProfileType}']]`;
-            const btnProfileType = await driver.findElement(By.xpath(xpathProfileType));
-            await driver.executeScript("arguments[0].click();", btnProfileType);
+            const checkProfilType = await waitForElementOrTimeoutReg(driver, `//li[.//span[normalize-space(text())='${formData.exampleProfileType}']]`, 1000, 4000)
+            if (checkProfilType) {
+                const xpathProfileType = `//li[.//span[normalize-space(text())='${formData.exampleProfileType}']]`;
+                const btnProfileType = await driver.findElement(By.xpath(xpathProfileType));
+                await driver.executeScript("arguments[0].click();", btnProfileType);
 
-            await driver.sleep(2000);
+                await driver.sleep(2000);
+            }
+
 
             //-------------------Nhập tên doanh nghiệp--------------------------------
 

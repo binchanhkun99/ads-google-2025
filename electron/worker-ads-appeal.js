@@ -436,6 +436,13 @@ async function processAppeal(driverPath, remoteDebuggingAddress, profileId, user
                 const inputTimeConnect = await driver.wait(until.elementLocated(By.xpath("/html/body/div[2]/div/section/div/div/article/form/div[30]//input")), waitTime);
                 await enterTextIntoInput(driver, inputTimeConnect, formData.exampleTimeConnect);
                 await driver.sleep(1500);
+            }else if(formData.exampleSelectConnect === 3){
+                //-------------------Nếu là Email me-------------------------
+
+                const xpathEmailMe = "//div[contains(@class, 'material-radio')]/input[@aria-label='Email me']"
+                const btnEmailMe = await driver.findElement(By.xpath(xpathEmailMe));
+                await driver.executeScript("arguments[0].click();", btnEmailMe);
+                await driver.sleep(2000);
             }
 
             //-------------------Nhập tóm tắt vấn đề-------------------------

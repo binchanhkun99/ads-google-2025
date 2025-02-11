@@ -201,26 +201,42 @@ async function processVeri(driverPath, remoteDebuggingAddress, profileId, user) 
             //-------------------Bấm vào bắt đầu verify--------------------------------
             const checkBtnStart = await waitForElementOrTimeoutReg(driver, "//button[.//span[text()='Start task']]", 1000, 4000)
             const checkBtnStartVerification = await waitForElementOrTimeoutReg(driver, "//material-button[.//div[text()='Start verification']]", 1000, 4000)
-
             // Xử lý logic nhấn nút
-            if (checkBtnStartVerification) {
+             if (checkBtnStartVerification) {
+                console.log("Start verification")
+
                 // Nếu nút "Start verification" có sẵn
                 const xpathStartVerify = '//material-button[.//div[text()="Start verification"]]';
                 const startVerifyBtn = await driver.findElement(By.xpath(xpathStartVerify));
-                await startVerifyBtn.click();
+                await driver.executeScript("arguments[0].click();", startVerifyBtn);
                 await driver.sleep(4500);
             } else if (checkBtnStart) {
+                console.log("span[text()=\"Start task\"]]")
                 // Nếu nút "Start task" có sẵn
                 const xpathStartTask = '//button[.//span[text()="Start task"]]';
                 const startTaskBtn = await driver.findElement(By.xpath(xpathStartTask));
-                await startTaskBtn.click();
+                await driver.executeScript("arguments[0].click();", startTaskBtn);
                 await driver.sleep(4500);
             } else {
+
                 // Nếu không tìm thấy cả hai nút
                 updateStatus = "Error";
                 return;
             }
+            const checkIfIndi = await waitForElementOrTimeoutReg(driver, "//iframe[contains(@src, 'https://payments.google.com/gp/w/u/0/identityverification')]")
 
+        if(checkIfIndi){
+            await driver.switchTo().frame(
+                await driver.findElement(By.xpath("//iframe[contains(@src, 'https://payments.google.com/gp/w/u/0/identityverification')]"))
+            );
+            const xpathStartVerifyBtn = "//button[.//span[text()='Start verification']]"
+            const StartVerifyBtn = await driver.findElement(By.xpath(xpathStartVerifyBtn))
+            await driver.executeScript("arguments[0].scrollIntoView(true);", StartVerifyBtn);
+            await driver.sleep(500);
+            await driver.executeScript("arguments[0].click();", StartVerifyBtn);
+            await driver.sleep(5000);
+        }
+            await driver.sleep(4500);
             //-------------------Form Tell us about your organization --------------------------------
             await waitForElementOrTimeoutReg(driver, `//material-radio[.//simple-html[.//span[text()='${formData.exampleOrganizationAds}']]]`, 1000, 4000)
             const xpathOrganizationAds = `//material-radio[.//simple-html[.//span[text()='${formData.exampleOrganizationAds}']]]//div[contains(@class, 'icon-container')]`;
