@@ -32,7 +32,7 @@ const {apiUrl, winPos} = workerData
 // Hàm chính trong worker
 const checkProfile = async (item) => {
     let result = {id: item.id, email: item.name, status: "Pending", data: []};
-    let driver = null;
+    let driver;
 
     try {
         const startResponse = await axios.get(`${apiUrl}/api/v3/profiles/start/${item.id}?win_pos=${winPos.x},${winPos.y}&win_size=${winPos.width},${winPos.height}`);
@@ -52,7 +52,12 @@ const checkProfile = async (item) => {
             '--disable-dev-shm-usage',
             '--disable-gpu',
             '--disable-popup-blocking',
-            '--disable-translate'
+            '--disable-translate',
+            '--disable-application-cache', // Tắt cache ứng dụng
+            '--disable-cache', // Tắt cache
+            '--disk-cache-size=0', // Đặt kích thước cache trên ổ đĩa về 0
+            '--media-cache-size=0' // Đặt kích thước cache media về 0
+
         );
 
         const service = new chrome.ServiceBuilder(startResponse.data.data.driver_path);
@@ -62,9 +67,32 @@ const checkProfile = async (item) => {
             .setChromeOptions(options)
             .build();
 
-
         await driver.get("https://ads.google.com/nav/selectaccount");
         await driver.sleep(2000)
+        // Lấy handle của tab hiện tại
+        let originalTab = await driver.getWindowHandle();
+
+        // Mở một tab mới
+        await driver.switchTo().newWindow('tab');
+
+        // Mở một trang web khác trong tab mới
+        await driver.get("https://ads.google.com/nav/selectaccount");
+
+        // Lấy danh sách tất cả các tab đang mở
+        let handles = await driver.getAllWindowHandles();
+
+        // Chuyển về tab cũ
+        await driver.switchTo().window(originalTab);
+
+        // Đóng tab cũ
+        await driver.close();
+
+        // Chuyển về tab mới (tab còn lại)
+        await driver.switchTo().window(handles[1]);
+        await driver.sleep(2000)
+
+
+
         await driver.manage().addCookie({
             name: 'AdsUserLocale',
             value: 'en',

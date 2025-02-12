@@ -79,7 +79,11 @@ async function processVeri(driverPath, remoteDebuggingAddress, profileId, user) 
             '--disable-dev-shm-usage',
             '--disable-gpu',
             '--disable-popup-blocking',
-            '--disable-translate'
+            '--disable-translate',
+            '--disable-application-cache', // Tắt cache ứng dụng
+            '--disable-cache', // Tắt cache
+            '--disk-cache-size=0', // Đặt kích thước cache trên ổ đĩa về 0
+            '--media-cache-size=0' // Đặt kích thước cache media về 0
         );
 
         const service = new chrome.ServiceBuilder(driverPath);
@@ -91,7 +95,28 @@ async function processVeri(driverPath, remoteDebuggingAddress, profileId, user) 
         await driver.sleep(1000)
 
         await driver.get("https://ads.google.com/nav/selectaccount");
-        await driver.sleep(4500)
+        await driver.sleep(2500)
+        // Lấy handle của tab hiện tại
+        let originalTab = await driver.getWindowHandle();
+
+        // Mở một tab mới
+        await driver.switchTo().newWindow('tab');
+
+        // Mở một trang web khác trong tab mới
+        await driver.get("https://ads.google.com/nav/selectaccount");
+
+        // Lấy danh sách tất cả các tab đang mở
+        let handles = await driver.getAllWindowHandles();
+
+        // Chuyển về tab cũ
+        await driver.switchTo().window(originalTab);
+
+        // Đóng tab cũ
+        await driver.close();
+
+        // Chuyển về tab mới (tab còn lại)
+        await driver.switchTo().window(handles[1]);
+        await driver.sleep(2000)
 
         const ElmListAccount = await driver.findElements(By.xpath('//material-list-item[contains(@class, "user-customer-list-item")]'));
         let listAccountBanned = [];
@@ -141,8 +166,7 @@ async function processVeri(driverPath, remoteDebuggingAddress, profileId, user) 
                 //-------------------Bấm vào verify ad--------------------------------
                 const advertiserBtnXPath = "//a[.//div[text()='Advertiser verification']]";
                 const advertiserBtn = await driver.findElement(By.xpath(advertiserBtnXPath));
-
-                await advertiserBtn.click();
+                await driver.executeScript("arguments[0].click()", advertiserBtn)
                 await driver.sleep(2500);
                 const checkVerify = await waitForElementOrTimeoutReg(driver, "//h4[text()='Complete the tasks to get verified']", 1000, 4000)
                 if (!checkVerify) {
@@ -202,7 +226,7 @@ async function processVeri(driverPath, remoteDebuggingAddress, profileId, user) 
             const checkBtnStart = await waitForElementOrTimeoutReg(driver, "//button[.//span[text()='Start task']]", 1000, 4000)
             const checkBtnStartVerification = await waitForElementOrTimeoutReg(driver, "//material-button[.//div[text()='Start verification']]", 1000, 4000)
             // Xử lý logic nhấn nút
-             if (checkBtnStartVerification) {
+            if (checkBtnStartVerification) {
                 console.log("Start verification")
 
                 // Nếu nút "Start verification" có sẵn
@@ -225,17 +249,17 @@ async function processVeri(driverPath, remoteDebuggingAddress, profileId, user) 
             }
             const checkIfIndi = await waitForElementOrTimeoutReg(driver, "//iframe[contains(@src, 'https://payments.google.com/gp/w/u/0/identityverification')]")
 
-        if(checkIfIndi){
-            await driver.switchTo().frame(
-                await driver.findElement(By.xpath("//iframe[contains(@src, 'https://payments.google.com/gp/w/u/0/identityverification')]"))
-            );
-            const xpathStartVerifyBtn = "//button[.//span[text()='Start verification']]"
-            const StartVerifyBtn = await driver.findElement(By.xpath(xpathStartVerifyBtn))
-            await driver.executeScript("arguments[0].scrollIntoView(true);", StartVerifyBtn);
-            await driver.sleep(500);
-            await driver.executeScript("arguments[0].click();", StartVerifyBtn);
-            await driver.sleep(5000);
-        }
+            if(checkIfIndi){
+                await driver.switchTo().frame(
+                    await driver.findElement(By.xpath("//iframe[contains(@src, 'https://payments.google.com/gp/w/u/0/identityverification')]"))
+                );
+                const xpathStartVerifyBtn = "//button[.//span[text()='Start verification']]"
+                const StartVerifyBtn = await driver.findElement(By.xpath(xpathStartVerifyBtn))
+                await driver.executeScript("arguments[0].scrollIntoView(true);", StartVerifyBtn);
+                await driver.sleep(500);
+                await driver.executeScript("arguments[0].click();", StartVerifyBtn);
+                await driver.sleep(5000);
+            }
             await driver.sleep(4500);
             //-------------------Form Tell us about your organization --------------------------------
             await waitForElementOrTimeoutReg(driver, `//material-radio[.//simple-html[.//span[text()='${formData.exampleOrganizationAds}']]]`, 1000, 4000)
@@ -415,7 +439,7 @@ async function processVeri(driverPath, remoteDebuggingAddress, profileId, user) 
             }
 
             const tabs = await driver.getAllWindowHandles();
-            await driver.switchTo().window(tabs[1]);
+            await driver.switchTo().window(tabs[i+1]);
 
             const xpathContinuePass = '/html/body/div[1]/root/div/advertiser-identity-view-loader/identity-invitation-view/div/div/intro-card/div[1]/div[1]/div/div[2]/material-button[1]';
             await waitForElementOrTimeoutReg(driver, xpathContinuePass, 1000, 20000);

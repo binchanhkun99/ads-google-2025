@@ -77,7 +77,12 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
             '--disable-dev-shm-usage',
             '--disable-gpu',
             '--disable-popup-blocking',
-            '--disable-translate'
+            '--disable-translate',
+            '--disable-application-cache', // Tắt cache ứng dụng
+            '--disable-cache', // Tắt cache
+            '--disk-cache-size=0', // Đặt kích thước cache trên ổ đĩa về 0
+            '--media-cache-size=0' // Đặt kích thước cache media về 0
+
         );
 
         const service = new chrome.ServiceBuilder(driverPath);
@@ -636,7 +641,28 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
 async function mainProcess(driver, formData, updateStatus) {
     // Bước bắt đầu: Truy cập vào trang
     await driver.get("https://ads.google.com/nav/selectaccount");
-    await driver.sleep(1000);
+    await driver.sleep(2500)
+    // Lấy handle của tab hiện tại
+    let originalTab = await driver.getWindowHandle();
+
+    // Mở một tab mới
+    await driver.switchTo().newWindow('tab');
+
+    // Mở một trang web khác trong tab mới
+    await driver.get("https://ads.google.com/nav/selectaccount");
+
+    // Lấy danh sách tất cả các tab đang mở
+    let handles = await driver.getAllWindowHandles();
+
+    // Chuyển về tab cũ
+    await driver.switchTo().window(originalTab);
+
+    // Đóng tab cũ
+    await driver.close();
+
+    // Chuyển về tab mới (tab còn lại)
+    await driver.switchTo().window(handles[1]);
+    await driver.sleep(2000)
     // Đặt cookie AdsUserLocale với giá trị 'en' (tiếng Anh)
     await driver.manage().addCookie({
         name: 'AdsUserLocale',

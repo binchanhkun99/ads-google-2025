@@ -69,7 +69,11 @@ async function createAndLogin(driverPath, remoteDebuggingAddress, user, pass, ma
         '--disable-dev-shm-usage',
         '--disable-gpu',
         '--disable-popup-blocking',
-        '--disable-translate'
+        '--disable-translate',
+        '--disable-application-cache', // Tắt cache ứng dụng
+        '--disable-cache', // Tắt cache
+        '--disk-cache-size=0', // Đặt kích thước cache trên ổ đĩa về 0
+        '--media-cache-size=0' // Đặt kích thước cache media về 0
     );
 
     const service = new chrome.ServiceBuilder(driverPath);
@@ -80,6 +84,29 @@ async function createAndLogin(driverPath, remoteDebuggingAddress, user, pass, ma
         .build();
 
     await driver.get('https://accounts.google.com/');
+    await driver.sleep(1500);
+    // Lấy handle của tab hiện tại
+    let originalTab = await driver.getWindowHandle();
+
+    // Mở một tab mới
+    await driver.switchTo().newWindow('tab');
+
+    // Mở một trang web khác trong tab mới
+    await driver.get('https://accounts.google.com/');
+
+    // Lấy danh sách tất cả các tab đang mở
+    let handles = await driver.getAllWindowHandles();
+
+    // Chuyển về tab cũ
+    await driver.switchTo().window(originalTab);
+
+    // Đóng tab cũ
+    await driver.close();
+
+    // Chuyển về tab mới (tab còn lại)
+    await driver.switchTo().window(handles[1]);
+    await driver.sleep(2000)
+
     const waitTime = 10000;
     try {
         const loginFormElement = await driver.wait(until.elementLocated(By.xpath('//input[@type="email"]')), waitTime);

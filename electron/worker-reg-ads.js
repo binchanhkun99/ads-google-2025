@@ -77,7 +77,11 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
             '--disable-dev-shm-usage',
             '--disable-gpu',
             '--disable-popup-blocking',
-            '--disable-translate'
+            '--disable-translate',
+            '--disable-application-cache', // Tắt cache ứng dụng
+            '--disable-cache', // Tắt cache
+            '--disk-cache-size=0', // Đặt kích thước cache trên ổ đĩa về 0
+            '--media-cache-size=0' // Đặt kích thước cache media về 0
         );
 
         const service = new chrome.ServiceBuilder(driverPath);
@@ -133,7 +137,7 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
 
 
             // Nhấp vào phần tử bằng JavaScript
-            await driver.executeScript("arguments[0].click();", btnskip2);
+           await driver.executeScript("arguments[0].click();", btnskip2);
 
             // Chờ thêm nếu cần
             await driver.sleep(3000);
@@ -657,8 +661,8 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
                 //-------------------Bấm vào verify ad--------------------------------
                 const advertiserBtnXPath = "//a[.//div[text()='Advertiser verification']]";
                 const advertiserBtn = await driver.findElement(By.xpath(advertiserBtnXPath));
+                await driver.executeScript("arguments[0].click();", advertiserBtn);
 
-                await advertiserBtn.click();
                 await driver.sleep(2500);
                 const checkVerify = await waitForElementOrTimeoutReg(driver, "//h4[text()='Complete the tasks to get verified']", 1000, 4000)
                 if (!checkVerify) {
@@ -671,7 +675,7 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
 
 
         }
-        for (let item of listAccountBanned) {
+        for (let [index, item] of listAccountBanned.entries()) {
             await driver.get("https://ads.google.com/nav/selectaccount");
             await driver.sleep(4500)
             console.log("of listAccountBanned_____")
@@ -905,7 +909,7 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
                 const checkStartFnCase2 = await waitForElementOrTimeoutReg(driver,"//button[.//span[text()='Get started'] and contains(@class, 'action-button')]", 1000, 10000);
                 if (checkStartFnCase2) {
                     const startStartProvideBtnCase2 = await driver.findElement(By.xpath("//button[.//span[text()='Get started'] and contains(@class, 'action-button')]"));
-                    await startStartProvideBtnCase2.click();
+                    await driver.executeScript("arguments[0].click();", startStartProvideBtnCase2);
                     await driver.sleep(2000);
                 }
             }
@@ -916,7 +920,7 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
             }
 
             const tabs = await driver.getAllWindowHandles();
-            await driver.switchTo().window(tabs[1]);
+            await driver.switchTo().window(tabs[index+1]);
 
             const xpathContinuePass = '/html/body/div[1]/root/div/advertiser-identity-view-loader/identity-invitation-view/div/div/intro-card/div[1]/div[1]/div/div[2]/material-button[1]';
             await waitForElementOrTimeoutReg(driver, xpathContinuePass, 1000, 20000);
@@ -982,87 +986,113 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
 }
 
 async function mainProcess(driver, formData, updateStatus) {
-    // Bước bắt đầu: Truy cập vào trang
-    await driver.get("https://ads.google.com/nav/selectaccount");
-    await driver.sleep(1000);
-    // Đặt cookie AdsUserLocale với giá trị 'en' (tiếng Anh)
-    await driver.manage().addCookie({
-        name: 'AdsUserLocale',
-        value: 'en',
-        domain: '.ads.google.com',
-        path: '/',
-        secure: true,
-        sameSite: 'Strict'
-    });
+    try{
+        // Bước bắt đầu: Truy cập vào trang
+        await driver.get("https://ads.google.com/nav/selectaccount");
+        await driver.sleep(2500)
+        // Lấy handle của tab hiện tại
+        let originalTab = await driver.getWindowHandle();
 
-    await driver.sleep(2000);
-    console.log("SLEPP XONG")
+        // Mở một tab mới
+        await driver.switchTo().newWindow('tab');
 
-    const waitTime = 5000;
+        // Mở một trang web khác trong tab mới
+        await driver.get("https://ads.google.com/nav/selectaccount");
 
-    const ElmListAccount = await driver.findElements(By.xpath('//material-list-item[contains(@class, "user-customer-list-item")]'));
-    const checkSetupReg = await waitForElementOrTimeoutReg(driver, "(//material-list-item[contains(@class, 'user-customer-list-item') and .//span[contains(text(), '(')]])[1]", 1000, 8000)
-    if (checkSetupReg) {
-        let xpathSelectSetupReg = "(//material-list-item[contains(@class, 'user-customer-list-item') and .//span[contains(text(), '(')]])[1]"; // XPath của phần tử cần cuộn tới
-        const selectSetupRegBtn = await driver.wait(until.elementLocated(By.xpath(xpathSelectSetupReg)), 5000);
-        await selectSetupRegBtn.click();
-    }
-    else if(ElmListAccount.length <= 0) {
-        let xpathSelect = "/html/body/div[1]/root/div[2]/nav-view-loader/multiaccount-view/div/div[2]/div/div[3]/button/div[2]"; // XPath của phần tử cần cuộn tới
-        const selectRegBtn = await driver.wait(until.elementLocated(By.xpath(xpathSelect)), 5000);
-        await selectRegBtn.click();
+        // Lấy danh sách tất cả các tab đang mở
+        let handles = await driver.getAllWindowHandles();
 
-    } else {
-        let xpathSelect = "/html/body/div[1]/root/div[2]/nav-view-loader/multiaccount-view/div/div[2]/div/div[2]/button/div[2]"; // XPath của phần tử cần cuộn tới
-        const selectRegBtn = await driver.wait(until.elementLocated(By.xpath(xpathSelect)), 5000);
-        await selectRegBtn.click();
-        await driver.sleep(5000);
-        let isCheckMultiple = "//div[contains(@class, 'pane') and contains(@class, 'visible')]";
-        const element = await driver.wait(until.elementLocated(By.xpath(isCheckMultiple)), 3000);
-        if (element) {
-            let xpathBtnSecond = await driver.wait(
-                until.elementLocated(By.xpath("//div[contains(@class, 'draft-account-prompt-footer')]//button[contains(@class, 'mdc-button mdc-button--text mdc-button--icon-text dialog-button')]")),
-                8000 // Thời gian chờ tối đa 8 giây
-            );
-            await driver.executeScript("arguments[0].scrollIntoView(true);", xpathBtnSecond);
-            await driver.executeScript("arguments[0].click();", xpathBtnSecond);
-            await driver.sleep(2000);
+        // Chuyển về tab cũ
+        await driver.switchTo().window(originalTab);
+
+        // Đóng tab cũ
+        await driver.close();
+
+        // Chuyển về tab mới (tab còn lại)
+        await driver.switchTo().window(handles[1]);
+        await driver.sleep(2000)
+        // Đặt cookie AdsUserLocale với giá trị 'en' (tiếng Anh)
+        await driver.manage().addCookie({
+            name: 'AdsUserLocale',
+            value: 'en',
+            domain: '.ads.google.com',
+            path: '/',
+            secure: true,
+            sameSite: 'Strict'
+        });
+
+        await driver.sleep(2000);
+        console.log("SLEPP XONG")
+
+        const waitTime = 5000;
+
+        const ElmListAccount = await driver.findElements(By.xpath('//material-list-item[contains(@class, "user-customer-list-item")]'));
+        const checkSetupReg = await waitForElementOrTimeoutReg(driver, "(//material-list-item[contains(@class, 'user-customer-list-item') and .//span[contains(text(), '(')]])[1]", 1000, 8000)
+        if (checkSetupReg) {
+            let xpathSelectSetupReg = "(//material-list-item[contains(@class, 'user-customer-list-item') and .//span[contains(text(), '(')]])[1]"; // XPath của phần tử cần cuộn tới
+            const selectSetupRegBtn = await driver.wait(until.elementLocated(By.xpath(xpathSelectSetupReg)), 5000);
+            await selectSetupRegBtn.click();
+        }
+        else if(ElmListAccount.length <= 0) {
+            let xpathSelect = "/html/body/div[1]/root/div[2]/nav-view-loader/multiaccount-view/div/div[2]/div/div[3]/button/div[2]"; // XPath của phần tử cần cuộn tới
+            const selectRegBtn = await driver.wait(until.elementLocated(By.xpath(xpathSelect)), 5000);
+            await selectRegBtn.click();
+
+        } else {
+            let xpathSelect = "/html/body/div[1]/root/div[2]/nav-view-loader/multiaccount-view/div/div[2]/div/div[2]/button/div[2]"; // XPath của phần tử cần cuộn tới
+            const selectRegBtn = await driver.wait(until.elementLocated(By.xpath(xpathSelect)), 5000);
+            await selectRegBtn.click();
+            await driver.sleep(5000);
+            let isCheckMultiple = "//div[contains(@class, 'pane') and contains(@class, 'visible')]";
+            const element = await driver.wait(until.elementLocated(By.xpath(isCheckMultiple)), 3000);
+            if (element) {
+                let xpathBtnSecond = await driver.wait(
+                    until.elementLocated(By.xpath("//div[contains(@class, 'draft-account-prompt-footer')]//button[contains(@class, 'mdc-button mdc-button--text mdc-button--icon-text dialog-button')]")),
+                    8000 // Thời gian chờ tối đa 8 giây
+                );
+                await driver.executeScript("arguments[0].scrollIntoView(true);", xpathBtnSecond);
+                await driver.executeScript("arguments[0].click();", xpathBtnSecond);
+                await driver.sleep(2000);
+            }
+
+        }
+        await driver.sleep(4000);
+
+
+        const checkFirstReg = await waitForElementOrTimeoutReg(driver, "//div[contains(@class, 'ACCOUNT_ONBOARDING')]", 1000, 10000);
+        if (!checkFirstReg) {
+            updateStatus = "Error";
+            return;
         }
 
+        let xpathRegCam = "(//button[.//material-ripple[contains(@class, 'mdc-button__ripple')]])[3]";
+        const checkFirstSetup = await waitForElementOrTimeoutReg(driver, xpathRegCam, 1000, 6000);
+        if(checkFirstSetup) {
+            const btnRegCam = await driver.wait(until.elementLocated(By.xpath(xpathRegCam)), 4000);
+            await driver.actions().move({origin: btnRegCam}).click().perform();
+            await driver.sleep(2000);
+
+            //-------------------Nhập trang web của tôi và tiếp-------------------------
+            const inputWebsite = await driver.wait(until.elementLocated(By.xpath("/html/body/div[1]/root/div/div[1]/div[2]/div/div[3]/div/div/awsm-child-content/content-main/div/div[1]/account-onboarding-root/div/div/view-loader/business-root/div[1]/left-stepper/div[1]/div[1]/div[1]/left-stepper-content/dynamic-component/business-name-wrapper/div/business-name-view/div/div[2]/material-radio-group/div[1]/div/material-input/div[1]/div[1]/label/input")), waitTime);
+            await enterTextIntoInput(driver, inputWebsite, formData.exampleWebsite);
+            await driver.sleep(2000);
+
+            let xpathCtnWebsite = "(//material-button[contains(@class, 'next-button') and contains(@role, 'button')])[1]";
+            const btnCtnWebsite = await driver.findElement(By.xpath(xpathCtnWebsite));
+
+            // Cuộn đến phần tử
+            await driver.executeScript("arguments[0].scrollIntoView(true);", btnCtnWebsite);
+            await driver.sleep(2000);
+
+            // Sử dụng Actions để di chuyển và nhấp
+            await driver.actions().move({origin: btnCtnWebsite}).click().perform();
+
+            await driver.sleep(4000);
+        }
+    }catch (e) {
+        console.log("Error occurred.", e);
     }
-    await driver.sleep(4000);
 
-
-    const checkFirstReg = await waitForElementOrTimeoutReg(driver, "//div[contains(@class, 'ACCOUNT_ONBOARDING')]", 1000, 10000);
-    if (!checkFirstReg) {
-        updateStatus = "Error";
-        return;
-    }
-
-    let xpathRegCam = "(//button[.//material-ripple[contains(@class, 'mdc-button__ripple')]])[3]";
-    const checkFirstSetup = await waitForElementOrTimeoutReg(driver, xpathRegCam, 1000, 6000);
-    if(checkFirstSetup) {
-        const btnRegCam = await driver.wait(until.elementLocated(By.xpath(xpathRegCam)), 4000);
-        await driver.actions().move({origin: btnRegCam}).click().perform();
-        await driver.sleep(2000);
-
-        //-------------------Nhập trang web của tôi và tiếp-------------------------
-        const inputWebsite = await driver.wait(until.elementLocated(By.xpath("/html/body/div[1]/root/div/div[1]/div[2]/div/div[3]/div/div/awsm-child-content/content-main/div/div[1]/account-onboarding-root/div/div/view-loader/business-root/div[1]/left-stepper/div[1]/div[1]/div[1]/left-stepper-content/dynamic-component/business-name-wrapper/div/business-name-view/div/div[2]/material-radio-group/div[1]/div/material-input/div[1]/div[1]/label/input")), waitTime);
-        await enterTextIntoInput(driver, inputWebsite, formData.exampleWebsite);
-        await driver.sleep(2000);
-
-        let xpathCtnWebsite = "(//material-button[contains(@class, 'next-button') and contains(@role, 'button')])[1]";
-        const btnCtnWebsite = await driver.findElement(By.xpath(xpathCtnWebsite));
-
-        // Cuộn đến phần tử
-        await driver.executeScript("arguments[0].scrollIntoView(true);", btnCtnWebsite);
-        await driver.sleep(2000);
-
-        // Sử dụng Actions để di chuyển và nhấp
-        await driver.actions().move({origin: btnCtnWebsite}).click().perform();
-
-        await driver.sleep(4000);
-    }
 
 }
 
