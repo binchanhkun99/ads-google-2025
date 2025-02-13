@@ -181,7 +181,6 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
             //-------------------Rời khỏi tạo chiến dịch-------------------------
 
             let xpathSkipFinal = "//material-button[.//div[text()='Leave campaign creation']]";
-            const btnSkipFinal = await driver.wait(until.elementLocated(By.xpath(xpathSkipFinal)), 10000);
 
             await driver.executeScript(`
     const element = document.evaluate(${JSON.stringify(xpathSkipFinal)}, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
@@ -281,6 +280,7 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
         }
 
         //-------------------Chọn quốc gia thanh toán-------------------------
+        console.log("Chọn qốc gia thanh toán_________________________________")
 
         let xpathCountry2 = "(//div[@buttondecorator and @keyboardonlyfocusindicator])[1]";
         await waitForElementOrTimeoutReg(driver, xpathCountry2, 1000, 10000);
@@ -398,6 +398,7 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
         await driver.sleep(5000);
 
         // const elementIframeModal = await driver.findElement(By.xpath("//div[@data-label='Profile type']//div[contains(@jsaction, 'click:')]"));
+
         const elementIframeModal = await driver.findElement(By.xpath("//input[@autocomplete='organization']"));
         await driver.sleep(2000);
         await driver.executeScript("arguments[0].focus();", elementIframeModal);
@@ -915,7 +916,7 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
             }
             else {
                 const startStartProvideBtn = await driver.findElement(By.xpath(xpathStartProvide));
-                await startStartProvideBtn.click();
+                await driver.executeScript("arguments[0].click();", startStartProvideBtn);
                 await driver.sleep(2000);
             }
 
@@ -1046,13 +1047,18 @@ async function mainProcess(driver, formData, updateStatus) {
             let isCheckMultiple = "//div[contains(@class, 'pane') and contains(@class, 'visible')]";
             const element = await driver.wait(until.elementLocated(By.xpath(isCheckMultiple)), 3000);
             if (element) {
-                let xpathBtnSecond = await driver.wait(
-                    until.elementLocated(By.xpath("//div[contains(@class, 'draft-account-prompt-footer')]//button[contains(@class, 'mdc-button mdc-button--text mdc-button--icon-text dialog-button')]")),
-                    8000 // Thời gian chờ tối đa 8 giây
-                );
-                await driver.executeScript("arguments[0].scrollIntoView(true);", xpathBtnSecond);
-                await driver.executeScript("arguments[0].click();", xpathBtnSecond);
-                await driver.sleep(2000);
+                const checkCreateMultiple = await waitForElementOrTimeoutReg(driver, "//div[contains(@class, 'draft-account-prompt-footer')]//button[contains(@class, 'mdc-button mdc-button--text mdc-button--icon-text dialog-button')]")
+                if(checkCreateMultiple){
+                    let xpathBtnSecond = await driver.wait(
+                        until.elementLocated(By.xpath("//div[contains(@class, 'draft-account-prompt-footer')]//button[contains(@class, 'mdc-button mdc-button--text mdc-button--icon-text dialog-button')]")),
+                        6000 // Thời gian chờ tối đa 8 giây
+                    );
+
+                    await driver.executeScript("arguments[0].scrollIntoView(true);", xpathBtnSecond);
+                    await driver.executeScript("arguments[0].click();", xpathBtnSecond);
+                    await driver.sleep(2000);
+                }
+
             }
 
         }
@@ -1073,7 +1079,25 @@ async function mainProcess(driver, formData, updateStatus) {
             await driver.sleep(2000);
 
             //-------------------Nhập trang web của tôi và tiếp-------------------------
-            const inputWebsite = await driver.wait(until.elementLocated(By.xpath("/html/body/div[1]/root/div/div[1]/div[2]/div/div[3]/div/div/awsm-child-content/content-main/div/div[1]/account-onboarding-root/div/div/view-loader/business-root/div[1]/left-stepper/div[1]/div[1]/div[1]/left-stepper-content/dynamic-component/business-name-wrapper/div/business-name-view/div/div[2]/material-radio-group/div[1]/div/material-input/div[1]/div[1]/label/input")), waitTime);
+            const inputWebsite = await driver.wait(until.elementLocated(By.xpath("//span[text()='Enter a web page URL*']/ancestor::label//input")), waitTime);
+            await enterTextIntoInput(driver, inputWebsite, formData.exampleWebsite);
+            await driver.sleep(2000);
+
+            let xpathCtnWebsite = "(//material-button[contains(@class, 'next-button') and contains(@role, 'button')])[1]";
+            const btnCtnWebsite = await driver.findElement(By.xpath(xpathCtnWebsite));
+
+            // Cuộn đến phần tử
+            await driver.executeScript("arguments[0].scrollIntoView(true);", btnCtnWebsite);
+            await driver.sleep(2000);
+
+            // Sử dụng Actions để di chuyển và nhấp
+            await driver.actions().move({origin: btnCtnWebsite}).click().perform();
+
+            await driver.sleep(4000);
+        }
+        else {
+            //-------------------Nhập trang web của tôi và tiếp-------------------------
+            const inputWebsite = await driver.wait(until.elementLocated(By.xpath("//span[text()='Enter a web page URL*']/ancestor::label//input")), waitTime);
             await enterTextIntoInput(driver, inputWebsite, formData.exampleWebsite);
             await driver.sleep(2000);
 
