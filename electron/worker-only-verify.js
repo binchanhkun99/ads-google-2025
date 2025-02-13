@@ -179,7 +179,7 @@ async function processVeri(driverPath, remoteDebuggingAddress, profileId, user) 
 
 
         }
-        for (let item of listAccountBanned) {
+        for (let [index, item] of listAccountBanned.entries()) {
             await driver.get("https://ads.google.com/nav/selectaccount");
             await driver.sleep(4500)
             console.log("of listAccountBanned_____")
@@ -439,7 +439,7 @@ async function processVeri(driverPath, remoteDebuggingAddress, profileId, user) 
             }
 
             const tabs = await driver.getAllWindowHandles();
-            await driver.switchTo().window(tabs[i+1]);
+            await driver.switchTo().window(tabs[index+1]);
 
             const xpathContinuePass = '/html/body/div[1]/root/div/advertiser-identity-view-loader/identity-invitation-view/div/div/intro-card/div[1]/div[1]/div/div[2]/material-button[1]';
             await waitForElementOrTimeoutReg(driver, xpathContinuePass, 1000, 20000);
