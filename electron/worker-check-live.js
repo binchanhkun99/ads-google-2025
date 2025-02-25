@@ -117,8 +117,7 @@ const checkProfile = async (item) => {
             await driver.sleep(5000);
 
             const isBanAds = await waitForElementOrTimeoutReg(driver, '//div[contains(@class, "notification-container") and contains(@class, "red-bar") and .//span[text()="Your account is suspended"]]', 1000, 4000);
-            const isInactive = await waitForElementOrTimeoutReg(driver, '//div[contains(@class, "notification-container") and contains(@class, "red-bar") and .//span[text()="Your account isn\'t active"]]', 1000, 3000);
-            if (isBanAds || isInactive) {
+            if (isBanAds) {
                 account.status = "inactive";
             } else account.status = "active";
 

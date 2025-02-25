@@ -11,7 +11,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     invokeReadFileReg: () => ipcRenderer.invoke('read-file-reg'),
     invokeSaveFileReg: (data) => ipcRenderer.invoke('save-file-reg', data),
 
-
+    importExcelFile: () => ipcRenderer.invoke('import-excel-file'),
+    readExcelSetup: () => ipcRenderer.invoke('read-excel-setup'),
     invokeReadId: () => ipcRenderer.invoke('read-id'),
     openProfile: (idProfile, apiUrl) => ipcRenderer.invoke('open-profile', idProfile, apiUrl),
     closeProfile: (idProfile, apiUrl) => ipcRenderer.invoke('close-profile', idProfile, apiUrl),
@@ -34,5 +35,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     regAdsSelenium: (dataJSON, numberThreads, apiUrl) => ipcRenderer.invoke('ads-reg', dataJSON, numberThreads, apiUrl),
     onlyReg: (dataJSON, numberThreads, apiUrl) => ipcRenderer.invoke('only-reg', dataJSON, numberThreads, apiUrl),
     onlyVerify: (dataJSON, numberThreads, apiUrl) => ipcRenderer.invoke('only-verify', dataJSON, numberThreads, apiUrl),
+    autoSetCamp: (dataJSON, numberThreads, apiUrl) => ipcRenderer.invoke('auto-set-camp', dataJSON, numberThreads, apiUrl)
 
 });

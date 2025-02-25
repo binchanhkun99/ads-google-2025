@@ -64,6 +64,8 @@ async function processAppeal(driverPath, remoteDebuggingAddress, profileId, user
         examplePhoneNumber: lines[18] || '',
         exampleTimeConnect: lines[19] || '',
         exampleProblemSummary: lines[20] || '',
+        exampleBusinessServe: lines[21] || '',
+
     };
 
     let driver;
@@ -135,9 +137,6 @@ async function processAppeal(driverPath, remoteDebuggingAddress, profileId, user
             const spanElement = await currentAccountElement.findElement(By.xpath('./span[1]'));
             let spanValue = await spanElement.getText();
             listAccountBanned.push(spanValue);
-
-            console.log("spanValue____________", spanValue);
-
             // Click vào phần tử
             await currentAccountElement.click();
             await driver.sleep(5000);

@@ -2,6 +2,7 @@ const {app, BrowserWindow, ipcMain, Menu, dialog} = require("electron");
 const path = require("path");
 const axios = require("axios");
 const fs = require("fs");
+const XLSX = require('xlsx');
 const {Worker} = require('worker_threads');
 
 function createWindow() {
@@ -80,7 +81,87 @@ ipcMain.handle('fetch-api', async (event, url) => {
         return {error: error.message};
     }
 });
+ipcMain.handle('import-excel-file', async () => {
+    try {
+        const { canceled, filePaths } = await dialog.showOpenDialog({
+            properties: ['openFile'],
+            filters: [{ name: 'Excel Files', extensions: ['xlsx', 'xls'] }],
+        });
 
+        if (canceled || !filePaths.length) return null;
+
+        const filePath = filePaths[0];
+        const workbook = XLSX.readFile(filePath);
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const data = XLSX.utils.sheet_to_json(sheet);
+        console.log('Data thô:', data); // Log để kiểm tra dữ liệu sau khi ánh xạ
+
+
+        // Chuẩn hóa dữ liệu: loại bỏ \r\n từ tên cột và giá trị
+        const normalizedData = data.map(row => {
+            const normalizedRow = {};
+            for (const key in row) {
+                const cleanKey = key.replace(/\r\n/g, ''); // Loại bỏ \r\n từ tên cột
+                const cleanValue = String(row[key] || '').replace(/\r\n/g, '').trim(); // Loại bỏ \r\n và khoảng trắng từ giá trị
+                normalizedRow[cleanKey] = cleanValue;
+            }
+            return normalizedRow;
+        });
+
+        // Ánh xạ dữ liệu sang định dạng mong muốn
+        const cardData = normalizedData.map(row => ({
+            exampleNumberCard: row.NumberCard || '',
+            exampleNameHolder: row.NameHolder || '',
+            exampleSecurityCode: String(row.SecurityCode || '').trim(),
+            exampleMM: String(row.MM || '').trim(),
+            exampleYY: String(row.YY || '').trim(),
+            exampleAddress: row.Address || '',
+        }));
+
+        return cardData;
+    } catch (error) {
+        console.error('Lỗi khi đọc file Excel:', error);
+        return null;
+    }
+});
+// Hàm mới để đọc file Excel và lấy dòng đầu tiên
+ipcMain.handle('read-excel-setup', async () => {
+    try {
+        const { canceled, filePaths } = await dialog.showOpenDialog({
+            properties: ['openFile'],
+            filters: [{ name: 'Excel Files', extensions: ['xlsx', 'xls'] }],
+        });
+
+        if (canceled || !filePaths.length) return null;
+
+        const filePath = filePaths[0];
+        const workbook = XLSX.readFile(filePath);
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const data = XLSX.utils.sheet_to_json(sheet, { header: 1 }); // Lấy dữ liệu thô với header
+
+        // Lấy dòng đầu tiên (dòng 2 trong Excel, vì dòng 1 là header)
+        if (data.length < 2) return null; // Kiểm tra nếu không có dữ liệu
+        const firstRow = data[1]; // Dòng đầu tiên của dữ liệu (index 1, vì index 0 là header)
+
+        // Ánh xạ dữ liệu từ file Excel sang định dạng mong muốn
+        const excelData = {
+            budgetType: firstRow[0] || 'Daily', // Cột A: Budget Type
+            locationCampaign: firstRow[1] || 'All countries and territories', // Cột B: Location
+            urlVideo: firstRow[2] || '', // Cột C: Url Video
+            longHeadline: firstRow[3] || '', // Cột D: Long Headline
+            description: firstRow[4] || '', // Cột E: Description
+            targetCPV: firstRow[5] || 5000, // Cột F: Target CPV
+            budgetMoney: firstRow[6] || 1111111, // Cột G: Budget Money
+        };
+
+        return excelData; // Trả về object với dữ liệu dòng đầu tiên
+    } catch (error) {
+        console.error('Lỗi khi đọc file Excel:', error);
+        return null;
+    }
+});
 ipcMain.handle('read-id', async (event) => {
     const filePath = path.join(__dirname, 'id.txt'); // Tên file mới nếu chưa tồn tại
     const defaultData = '1'
@@ -123,7 +204,8 @@ Tôi
 84
 983383863
 Trong tháng
-Rất nhiều vấn đề`;
+Rất nhiều vấn đề
+Vietnam`;
 
     try {
         // Kiểm tra nếu file không tồn tại
@@ -613,6 +695,7 @@ ipcMain.handle('ads-appeal', async (event, dataJSON, numberThreads, apiUrl) => {
         return {success: false, error: error.message};
     }
 });
+
 ipcMain.handle('ads-limit-appeal', async (event, dataJSON, numberThreads, apiUrl) => {
     const items = JSON.parse(dataJSON);
     const MAX_CONCURRENT_WORKERS = numberThreads || 5; // Mặc định 5 luồng nếu không truyền `numberThreads`
@@ -747,7 +830,6 @@ ipcMain.handle('ads-reg', async (event, dataJSON, numberThreads, apiUrl) => {
     }
 })
 
-
 ipcMain.handle('only-reg', async (event, dataJSON, numberThreads, apiUrl) => {
     const items = JSON.parse(dataJSON);
     const MAX_CONCURRENT_WORKERS = numberThreads || 5; // Mặc định 5 luồng nếu không truyền `numberThreads`
@@ -815,8 +897,6 @@ ipcMain.handle('only-reg', async (event, dataJSON, numberThreads, apiUrl) => {
     }
 })
 
-
-
 ipcMain.handle('only-verify', async (event, dataJSON, numberThreads, apiUrl) => {
     const items = JSON.parse(dataJSON);
     const MAX_CONCURRENT_WORKERS = numberThreads || 5; // Mặc định 5 luồng nếu không truyền `numberThreads`
@@ -883,3 +963,69 @@ ipcMain.handle('only-verify', async (event, dataJSON, numberThreads, apiUrl) => 
         return {success: false, error: error.message};
     }
 })
+ipcMain.handle('auto-set-camp', async (event, dataJSON, numberThreads, apiUrl) => {
+    const items = JSON.parse(dataJSON);
+    const MAX_CONCURRENT_WORKERS = numberThreads || 5; // Mặc định 5 luồng nếu không truyền `numberThreads`
+    const windowPositions = calculateWindowPositions(MAX_CONCURRENT_WORKERS);
+    const workerQueue = async (tasks, maxConcurrent) => {
+        const results = [];
+        const executing = [];
+
+        for (const task of tasks) {
+            const promise = task()
+                .then(result => {
+                    results.push(result);
+                    executing.splice(executing.indexOf(promise), 1);
+                })
+                .catch(error => {
+                    results.push({success: false, error: error.message});
+                    executing.splice(executing.indexOf(promise), 1);
+                });
+
+            executing.push(promise);
+
+            if (executing.length >= maxConcurrent) {
+                await Promise.race(executing); // Đợi một promise hoàn thành
+            }
+        }
+        await Promise.all(executing); // Chờ tất cả các promise còn lại hoàn thành
+        return results;
+    };
+
+    // Tạo danh sách tasks cho worker
+    const tasks = items.map((item, index) => () => new Promise((resolve, reject) => {
+        const worker = new Worker(path.join(__dirname, 'worker-auto-set-camp.js'), {
+            workerData: {
+                item, apiUrl,
+                winPos: windowPositions[index % MAX_CONCURRENT_WORKERS] // Truyền vị trí vào worker
+            }
+        });
+
+        worker.on('message', (result) => {
+            event.sender.send('update-profile-data');
+            resolve(result);
+        });
+
+        worker.on('error', (error) => {
+            console.error(`Worker error: ${error.message}`);
+            reject(error);
+        });
+
+        worker.on('exit', (code) => {
+            if (code !== 0) {
+                console.error(`Worker stopped with exit code ${code}`);
+                reject(new Error(`Worker stopped with exit code ${code}`));
+            }
+        });
+    }));
+
+    try {
+        const results = await workerQueue(tasks, MAX_CONCURRENT_WORKERS);
+        // Trả về kết quả từ tất cả các worker
+        return {success: true, results};
+    } catch (error) {
+        console.error('Error during worker execution:', error);
+        return {success: false, error: error.message};
+    }
+})
+

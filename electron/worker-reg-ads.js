@@ -15,7 +15,6 @@ const {item, apiUrl, winPos} = workerData;
         await axios.post(`${apiUrl}/api/v3/profiles/update/${item.id}`, {
             profile_name: nameProfile + " " + "Pending",
         });
-
         // Gửi request bắt đầu
         const startResponse = await axios.get(`${apiUrl}/api/v3/profiles/start/${item.id}?win_pos=${winPos.x},${winPos.y}&win_size=${winPos.width},${winPos.height}`);
         if (startResponse.status === 200) {
@@ -23,17 +22,17 @@ const {item, apiUrl, winPos} = workerData;
                 startResponse.data.data.driver_path,
                 startResponse.data.data.remote_debugging_address,
                 item.id,
-                item.name
+                item.name,
+                item.cardData
             );
         }
-
         parentPort.postMessage({success: true, id: item.id});
     } catch (error) {
         parentPort.postMessage({success: false, id: item.id, error: error.message});
     }
 })();
 
-async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
+async function processReg(driverPath, remoteDebuggingAddress, profileId, user, cardData) {
     const filePath = path.join(__dirname, 'setup-reg.txt');
     if (!fs.existsSync(filePath)) {
         throw new Error("Missing setup-reg.txt");
@@ -48,14 +47,15 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
         exampleOrganizationName: lines[4] || '',
         exampleLegalName: lines[5] || '',
         exampleZipcode: lines[6] || '',
-        exampleNumberCard: lines[7] || '',
-        exampleNameHolder: lines[8] || '',
-        exampleSecurityCode: lines[9] || '',
-        exampleMM: lines[10] || '',
-        exampleYY: lines[11] || '',
+        // Thông tin thẻ từ cardData
+        exampleNumberCard: cardData.exampleNumberCard || '',
+        exampleNameHolder: cardData.exampleNameHolder || '',
+        exampleSecurityCode: cardData.exampleSecurityCode || '',
+        exampleMM: cardData.exampleMM || '',
+        exampleYY: cardData.exampleYY || '',
+        exampleAddress: cardData.exampleAddress || '',
         exampleMessagingApp: lines[12] || '',
         exampleAdvertisingAgenCy: lines[13] || '',
-        exampleAddress: lines[14] || '',
         exampleCity: lines[15] || '',
         exampleState: lines[16] || '',
         exampleZipCode2: lines[17] || '',
@@ -675,7 +675,7 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
 
 
         }
-        for (let item of listAccountBanned) {
+        for (let [index, item] of listAccountBanned.entries()) {
             await driver.get("https://ads.google.com/nav/selectaccount");
             await driver.sleep(4500)
             console.log("of listAccountBanned_____")
@@ -920,7 +920,7 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
             }
 
             const tabs = await driver.getAllWindowHandles();
-            await driver.switchTo().window(tabs[2]);
+            await driver.switchTo().window(tabs[index+1]);
 
             const xpathContinuePass = '/html/body/div[1]/root/div/advertiser-identity-view-loader/identity-invitation-view/div/div/intro-card/div[1]/div[1]/div/div[2]/material-button[1]';
             await waitForElementOrTimeoutReg(driver, xpathContinuePass, 1000, 20000);
