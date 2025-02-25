@@ -103,7 +103,7 @@ async function processVeri(driverPath, remoteDebuggingAddress, profileId, user) 
         await driver.switchTo().newWindow('tab');
 
         // Mở một trang web khác trong tab mới
-        await driver.get('https://accounts.google.com/');
+        await driver.get("https://ads.google.com/nav/selectaccount");
 
         // Lấy danh sách tất cả các tab đang mở
         let handles = await driver.getAllWindowHandles();
@@ -166,8 +166,7 @@ async function processVeri(driverPath, remoteDebuggingAddress, profileId, user) 
                 //-------------------Bấm vào verify ad--------------------------------
                 const advertiserBtnXPath = "//a[.//div[text()='Advertiser verification']]";
                 const advertiserBtn = await driver.findElement(By.xpath(advertiserBtnXPath));
-
-                await advertiserBtn.click();
+                await driver.executeScript("arguments[0].click()", advertiserBtn)
                 await driver.sleep(2500);
                 const checkVerify = await waitForElementOrTimeoutReg(driver, "//h4[text()='Complete the tasks to get verified']", 1000, 4000)
                 if (!checkVerify) {
@@ -180,7 +179,7 @@ async function processVeri(driverPath, remoteDebuggingAddress, profileId, user) 
 
 
         }
-        for (let item of listAccountBanned) {
+        for (let [index, item] of listAccountBanned.entries()) {
             await driver.get("https://ads.google.com/nav/selectaccount");
             await driver.sleep(4500)
             console.log("of listAccountBanned_____")
@@ -361,7 +360,7 @@ async function processVeri(driverPath, remoteDebuggingAddress, profileId, user) 
             const xpathInput2 = "/html/body/div[1]/c-wiz/div/div/c-wiz/div/c-wiz/div[1]/div/div[1]/div/div/div/div/div[1]/div[3]/div/div[4]/div/div/div[1]/label/input";
             const xpathInput2Find = await driver.findElement(By.xpath(xpathInput2))
             await driver.executeScript("arguments[0].scrollIntoView(true);", xpathInput2Find);
-
+            console.log("_____City", formData.exampleCity)
             await enterTextIntoInput(driver, xpathInput2Find, formData.exampleCity);
 
             await driver.sleep(2000);
@@ -440,7 +439,7 @@ async function processVeri(driverPath, remoteDebuggingAddress, profileId, user) 
             }
 
             const tabs = await driver.getAllWindowHandles();
-            await driver.switchTo().window(tabs[2]);
+            await driver.switchTo().window(tabs[index+1]);
 
             const xpathContinuePass = '/html/body/div[1]/root/div/advertiser-identity-view-loader/identity-invitation-view/div/div/intro-card/div[1]/div[1]/div/div[2]/material-button[1]';
             await waitForElementOrTimeoutReg(driver, xpathContinuePass, 1000, 20000);
