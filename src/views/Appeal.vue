@@ -5,7 +5,6 @@ import axios from "axios";
 
 const currentTime = ref("");
 const apiUrl = ref('http://127.0.0.1:19995');
-import CreditCard from '../components/CreditCard.vue'
 
 let intervalId = null;
 const isLoading = ref(false);
@@ -39,14 +38,17 @@ const getSelectedDisplay = () => {
   const selected = options.find(option => option.value === selectedOption.value);
   return selected ? selected.display : 'Chưa chọn';
 };
+const filePathReg = ref('')
 const cardDataList = ref([]); // Danh sách các thông tin thẻ từ file Excel
 // Hàm đọc file Excel
 const readExcelFile = async () => {
   isLoading.value = true;
   const result = await window.electronAPI.importExcelFile();
-  if (result && result.length > 0) {
-    cardDataList.value = result;
-    console.log("result excel", result);
+
+  if (result.data && result.data.length > 0) {
+    cardDataList.value = result.data;
+    filePathReg.value = result.filePath;
+
     Object.assign(formDataReg.value, result[0]);
   }
   isLoading.value = false;
@@ -1130,6 +1132,7 @@ onUnmounted(() => {
           <div class="form-group">
             <label>Chọn file Excel chứa thông tin list thẻ:</label>
             <button class="p-2" @click="readExcelFile">Chọn file Excel</button>
+            <span class="flex w-full mt-1">{{filePathReg}}</span>
           </div>
           <div class="form-group">
             <label>Messaging app?</label>

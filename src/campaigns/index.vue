@@ -126,7 +126,7 @@
                 <PencilIcon class="w-4 h-4 text-gray-400" />
               </td>
               <td class="px-4 py-3 text-right">
-                <button class="bg-emerald-500 hover:bg-emerald-600 px-3 py-1 rounded text-sm">
+                <button @click="openProfile(profile.id)" class="bg-emerald-500 hover:bg-emerald-600 px-3 py-1 rounded text-sm">
                   Mở
                 </button>
               </td>
@@ -262,18 +262,37 @@ const updateSelectAllState = () => {
 const updateSelectedProfiles = () => {
   updateSelectAllState()
 }
+async function openProfile(id) {
+  try {
+    const rs = await window.electronAPI.openProfile(id, apiUrl.value);
+    if (rs.success) {
+      profiles.value.forEach(item => {
+        // if (item.id === id) {
+        //   item.open = isOpen.value;
+        // }
+      });
+    }
+  } catch (error) {
+    console.log(error)
+    notify({
+      type: 'error',
+      title: "Lỗi",
+      text: "Có lỗi xảy ra",
+    });
+  }
+
+}
 
 const numberThreads = ref(5)
 const setupFromExcel = async () => {
   try {
     isLoading.value = true;
     const result = await window.electronAPI.readExcelSetup(); // Sử dụng hàm mới
-    console.log("result_____________", result);
-
     // Kiểm tra xem result có phải là object và không rỗng
     if (result && Object.keys(result).length > 0) {
       // Dữ liệu đã là object chứa thông tin dòng đầu tiên, không cần lấy thêm `firstRow`
       excelData.value = {
+        campaignName: result.campaignName || null,
         budgetType: result.budgetType || 'Daily',
         locationCampaign: result.locationCampaign || 'All countries and territories',
         urlVideo: result.urlVideo || '',

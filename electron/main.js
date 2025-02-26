@@ -81,6 +81,7 @@ ipcMain.handle('fetch-api', async (event, url) => {
         return {error: error.message};
     }
 });
+
 ipcMain.handle('import-excel-file', async () => {
     try {
         const { canceled, filePaths } = await dialog.showOpenDialog({
@@ -90,13 +91,11 @@ ipcMain.handle('import-excel-file', async () => {
 
         if (canceled || !filePaths.length) return null;
 
-        const filePath = filePaths[0];
+        const filePath = filePaths[0]; // Đường dẫn file Excel
         const workbook = XLSX.readFile(filePath);
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
         const data = XLSX.utils.sheet_to_json(sheet);
-        console.log('Data thô:', data); // Log để kiểm tra dữ liệu sau khi ánh xạ
-
 
         // Chuẩn hóa dữ liệu: loại bỏ \r\n từ tên cột và giá trị
         const normalizedData = data.map(row => {
@@ -119,12 +118,14 @@ ipcMain.handle('import-excel-file', async () => {
             exampleAddress: row.Address || '',
         }));
 
-        return cardData;
+        // Trả về cả dữ liệu và đường dẫn file
+        return { data: cardData, filePath };
     } catch (error) {
         console.error('Lỗi khi đọc file Excel:', error);
         return null;
     }
 });
+
 // Hàm mới để đọc file Excel và lấy dòng đầu tiên
 ipcMain.handle('read-excel-setup', async () => {
     try {
@@ -147,13 +148,14 @@ ipcMain.handle('read-excel-setup', async () => {
 
         // Ánh xạ dữ liệu từ file Excel sang định dạng mong muốn
         const excelData = {
-            budgetType: firstRow[0] || 'Daily', // Cột A: Budget Type
-            locationCampaign: firstRow[1] || 'All countries and territories', // Cột B: Location
-            urlVideo: firstRow[2] || '', // Cột C: Url Video
-            longHeadline: firstRow[3] || '', // Cột D: Long Headline
-            description: firstRow[4] || '', // Cột E: Description
-            targetCPV: firstRow[5] || 5000, // Cột F: Target CPV
-            budgetMoney: firstRow[6] || 1111111, // Cột G: Budget Money
+            campaignName: firstRow[0],
+            budgetType: firstRow[1] || 'Daily', // Cột B: Budget Type
+            locationCampaign: firstRow[2] || 'All countries and territories', // Cột C: Location
+            urlVideo: firstRow[3] || '', // Cột D: Url Video
+            longHeadline: firstRow[4] || '', // Cột E: Long Headline
+            description: firstRow[5] || '', // Cột F: Description
+            targetCPV: firstRow[6] || 5000, // Cột G: Target CPV
+            budgetMoney: firstRow[7] || 1111111, // Cột H: Budget Money
         };
 
         return excelData; // Trả về object với dữ liệu dòng đầu tiên

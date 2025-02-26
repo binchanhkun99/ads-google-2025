@@ -19,7 +19,8 @@ const { item, apiUrl, winPos } = workerData;
                 startResponse.data.data.driver_path,
                 startResponse.data.data.remote_debugging_address,
                 item.id,
-                item.name
+                item.name,
+                item
             );
         }
         parentPort.postMessage({ success: true, id: item.id });
@@ -28,34 +29,10 @@ const { item, apiUrl, winPos } = workerData;
     }
 })();
 
-async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, user) {
+async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, user, data) {
     let driver;
     let updateStatus = "Success";
     try {
-        const filePath = path.join(__dirname, 'setup-reg.txt');
-        if (!fs.existsSync(filePath)) {
-            throw new Error("Missing setup-reg.txt");
-        }
-        const data = fs.readFileSync(filePath, 'utf-8');
-        const lines = data.split('\n').map(line => line.trim());
-        const formData = {
-            exampleWebsite: lines[0] || '',
-            exampleBillingCountry: lines[1] || '',
-            exampleCurrency: lines[2] || '',
-            exampleProfileType: lines[3] || 'Organization',
-            exampleOrganizationName: lines[4] || '',
-            exampleLegalName: lines[5] || '',
-            exampleZipcode: lines[6] || '',
-            exampleMessagingApp: lines[12] || '',
-            exampleAdvertisingAgenCy: lines[13] || '',
-            exampleCity: lines[15] || '',
-            exampleState: lines[16] || '',
-            exampleZipCode2: lines[17] || '',
-            exampleOrganizationAds: lines[18] || '',
-            exampleWantVerifyToday: lines[19] || '',
-            exampleAgencyPayFor: lines[20] || '',
-            exampleWhoPayFor: lines[21] || '',
-        };
 
         const debugPort = remoteDebuggingAddress.split(":")[1];
         const options = new chrome.Options();
@@ -132,6 +109,7 @@ async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, use
 
         const actions = driver.actions({ async: true }); // Khởi tạo Actions
         for (let item of listAccountBanned) {
+            await waitForElementOrTimeout(driver, `//material-list-item[contains(@class, "user-customer-list-item") and .//span[text()='${item}']]`);
             const xpathFirst = await driver.findElement(By.xpath(`//material-list-item[contains(@class, "user-customer-list-item") and .//span[text()='${item}']]`));
             await xpathFirst.click();
             await driver.sleep(4500);
@@ -170,9 +148,225 @@ async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, use
             const campaignsConfirmCreateBtn = await driver.findElement(By.xpath(campaignsBtnConfirmCreateXPath));
             await actions.move({ origin: campaignsConfirmCreateBtn }).click().perform();
             await driver.sleep(2000);
+            //Click skip
+            const skipXpath = "//button[.//span[contains(text(), 'Skip')]]";
+            await driver.executeScript(`
+                        const element = document.evaluate("${skipXpath}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                        if (element) {
+                            element.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
+                    `);
+            await driver.sleep(4000);
 
+            const skipBtn = await driver.findElement(By.xpath(skipXpath));
+            await driver.executeScript("arguments[0].click();", skipBtn);
+            await driver.sleep(2000);
+
+            // Bấm vào Create a campaign without guidance
+            await waitForElementOrTimeout(driver, "//selection-card[.//span[contains(text(), 'Create a campaign without guidance')]]", 1000, 5000);
+            const selectCreateCampaignXpath = "//selection-card[.//span[contains(text(), 'Create a campaign without guidance')]]";
+            await driver.executeScript(`
+                        const element = document.evaluate("${selectCreateCampaignXpath}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                        if (element) {
+                            element.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
+                    `);
+            await driver.sleep(3000);
+            const selectCreateCampaignBtn = await driver.findElement(By.xpath(selectCreateCampaignXpath));
+            await selectCreateCampaignBtn.click();
+            await driver.sleep(2000);
+
+            // Bấm vào tạo chiến dịch video
+            const videoCreateCampaignXpath = "//selection-card[@aria-label='Video']";
+            await driver.executeScript(`
+                        const element = document.evaluate("${videoCreateCampaignXpath}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                        if (element) {
+                            element.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
+                    `);
+            await driver.sleep(3000);
+            const videoCreateCampaignBtn = await driver.findElement(By.xpath(videoCreateCampaignXpath));
+            await videoCreateCampaignBtn.click();
+            await driver.sleep(2000);
+
+            // Bấm vào continue
+            const continueCreateCampaignXpath = "//material-button[@aria-label='Continue to the next step']";
+            await driver.executeScript(`
+                        const element = document.evaluate("${continueCreateCampaignXpath}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                        if (element) {
+                            element.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
+                    `);
+            await driver.sleep(3000);
+            const continueCampaignBtn = await driver.findElement(By.xpath(continueCreateCampaignXpath));
+            await driver.executeScript("arguments[0].click();", continueCampaignBtn);
+            await driver.sleep(2000);
+
+            if (data.excelConfig?.campaignName){
+                console.log("CO VAO DAYYYYY")
+                await waitForElementOrTimeout(driver, '//input[@aria-label="Campaign name"]')
+                const campaignNameInputXpath = "//input[@aria-label='Campaign name']";
+                await driver.executeScript(`
+                        const element = document.evaluate("${campaignNameInputXpath}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                        if (element) {
+                            element.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
+                    `);
+                await driver.sleep(2000);
+                const campaignNameInput = await driver.wait(until.elementLocated(By.xpath(campaignNameInputXpath)), 2000);
+
+                await enterTextIntoInput(driver, campaignNameInput, data.excelConfig.campaignName);
+                await driver.sleep(2000);
+            }
+
+
+            const scrollToBudgetTypeXpath = "//div[text()='Enter budget type and amount']"
+            await driver.executeScript(`
+                        const element = document.evaluate("${scrollToBudgetTypeXpath}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                        if (element) {
+                            element.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
+                    `);
+            await driver.sleep(2000);
+            let xPathBtnBudgetType = "//budget-and-dates/expansion-panel/material-expansionpanel/div/div[2]/div/div[1]/div/div/div/section/div/div[2]/div[1]/material-dropdown-select/dropdown-button/div";
+
+            // Tìm phần tử bằng XPath
+            const BtnBudgetType = await driver.findElement(By.xpath(xPathBtnBudgetType));
+
+            // Cuộn phần tử vào khung nhìn nếu cần
+            await driver.executeScript("arguments[0].scrollIntoView(true);", BtnBudgetType);
+
+            // Nhấp vào phần tử bằng JavaScript
+            await driver.executeScript("arguments[0].click();", BtnBudgetType);
+
+            let xPathBudgetType = `//material-select-dropdown-item[.//span[text()='${data.excelConfig.budgetType}']]`;
+
+            await driver.executeScript(`
+    const element = document.evaluate(
+        "${xPathBudgetType}",
+        document,
+        null,
+        XPathResult.FIRST_ORDERED_NODE_TYPE,
+        null
+    ).singleNodeValue;
+
+    if (element) {
+        element.click();
+        console.log("Đã click vào phần tử");
+    } else {
+        console.error("Không tìm thấy phần tử theo XPath đã cung cấp.");
+    }
+`);
+            await driver.sleep(3000);
+            const budgetMoneyInputXpath = "//input[contains(@aria-label, 'Budget amount in')]";
+            await driver.executeScript(`
+                        const element = document.evaluate("${budgetMoneyInputXpath}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                        if (element) {
+                            element.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
+                    `);
+            await driver.sleep(2000);
+            const budgetMoneyInput = await driver.wait(until.elementLocated(By.xpath(budgetMoneyInputXpath)), 2000);
+            console.log("data.excelConfig.budgetMoney", data.excelConfig.budgetMoney)
+            await enterTextIntoInput(driver, budgetMoneyInput, data.excelConfig.budgetMoney);
+            await driver.sleep(2000);
+
+            const locationXpath = `//material-radio[.//div[text()='${data.excelConfig.locationCampaign}']]`;
+            await driver.executeScript(`
+                        const element = document.evaluate("${locationXpath}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                        if (element) {
+                            element.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
+                    `);
+            await driver.sleep(3000);
+            const locationSelectBtn = await driver.findElement(By.xpath(locationXpath));
+            await locationSelectBtn.click();
+            await driver.sleep(2000);
+
+            const SearchYTBLinkInputXpath = "//input[@aria-label='Search for a video or paste the URL from YouTube']";
+            await driver.executeScript(`
+                        const element = document.evaluate("${SearchYTBLinkInputXpath}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                        if (element) {
+                            element.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
+                    `);
+
+            await driver.sleep(2000);
+            const inputElement = await driver.findElement(By.xpath(SearchYTBLinkInputXpath));
+            await inputElement.sendKeys(data.excelConfig.urlVideo);
+            await driver.sleep(5000);
+
+
+            const finalLinkInputXpath = "//span[text()='Final URL']/ancestor::label/input";
+            await driver.executeScript(`
+                        const element = document.evaluate("${finalLinkInputXpath}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                        if (element) {
+                            element.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
+                    `);
+
+            await driver.sleep(2000);
+            const finalLinkElement = await driver.findElement(By.xpath(finalLinkInputXpath));
+            await finalLinkElement.sendKeys(data.excelConfig.urlVideo);
+            await driver.sleep(5000);
+
+
+
+            const longHeadlineInputXpath = "//input[@aria-label='Long headline']";
+            await driver.executeScript(`
+                        const element = document.evaluate("${longHeadlineInputXpath}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                        if (element) {
+                            element.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
+                    `);
+            await driver.sleep(2000);
+            const longHeadlineInput = await driver.wait(until.elementLocated(By.xpath(longHeadlineInputXpath)), 2000);
+            await enterTextIntoInput(driver, longHeadlineInput, data.excelConfig.longHeadline);
+            await driver.sleep(2000);
+
+            const descriptionInputXpath = "//input[@aria-label='Description']";
+            await driver.executeScript(`
+                        const element = document.evaluate("${descriptionInputXpath}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                        if (element) {
+                            element.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
+                    `);
+            await driver.sleep(2000);
+            const descriptionInput = await driver.wait(until.elementLocated(By.xpath(descriptionInputXpath)), 2000);
+            await enterTextIntoInput(driver, descriptionInput, data.excelConfig.description);
+            await driver.sleep(2000);
+
+            const targetInputXpath = "//input[@aria-label='Target CPV bid in $']";
+            await driver.executeScript(`
+                        const element = document.evaluate("${targetInputXpath}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                        if (element) {
+                            element.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
+                    `);
+            await driver.sleep(2000);
+            await enterTextIntoInput(driver, targetInputXpath, data.excelConfig.targetCPV);            await driver.sleep(2000);
+            await driver.sleep(2000);
+
+            const campaignsBtnCreateFinalXPath = "//material-button[.//div[text()='Create campaign']]"
+            const campaignsCreateFinalBtn = await driver.findElement(By.xpath(campaignsBtnCreateFinalXPath));
+            await driver.executeScript(`
+                        const element = document.evaluate("${campaignsBtnCreateFinalXPath}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                        if (element) {
+                            element.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
+                    `);
+            await driver.executeScript("arguments[0].click();", campaignsCreateFinalBtn);
+            await driver.sleep(3000);
+
+            const checkSuccess = await waitForElementOrTimeout(driver, "//div[text()='Congratulations! Your campaign is ready.']")
+            if (!checkSuccess) {
+                updateStatus = "Error"
+            }
             await driver.sleep(10000);
             await driver.get("https://ads.google.com/nav/selectaccount");
+            await driver.sleep(5000);
+
+
         }
         //Merge vào nhánh dev để lấy code set camp của Tuấn
     } catch (error) {
@@ -186,7 +380,6 @@ async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, use
             try {
                 const emailMatch = user.match(/^[^@\s]+@[^@\s]+\.[^@\s]+/);
                 const email = emailMatch ? emailMatch[0] : "";
-                console.log("EMAIL__________________", email);
                 const closeResponse = await axios.post(`${apiUrl}/api/v3/profiles/close/${profileId}`);
                 const updateResponse = await axios.post(`${apiUrl}/api/v3/profiles/update/${profileId}`, {
                     profile_name: email + " " + updateStatus,
