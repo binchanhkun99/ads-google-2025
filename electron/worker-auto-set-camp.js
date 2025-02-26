@@ -258,17 +258,11 @@ async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, use
     }
 `);
             await driver.sleep(3000);
-            const budgetMoneyInputXpath = "//input[contains(@aria-label, 'Budget amount in')]";
-            await driver.executeScript(`
-                        const element = document.evaluate("${budgetMoneyInputXpath}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-                        if (element) {
-                            element.scrollIntoView({ behavior: "smooth", block: "center" });
-                        }
-                    `);
-            await driver.sleep(2000);
-            const budgetMoneyInput = await driver.wait(until.elementLocated(By.xpath(budgetMoneyInputXpath)), 2000);
-            console.log("data.excelConfig.budgetMoney", data.excelConfig.budgetMoney)
-            await enterTextIntoInput(driver, budgetMoneyInput, data.excelConfig.budgetMoney);
+            const budgetMoneyInputXpath = "//material-expansionpanel/div/div[2]/div/div[1]/div/div/div/section/div/div[2]/div[2]/money-input/mask-money-input/material-input/div[1]/div[1]/label/input";
+
+
+            const budgetMoneyInputElement = await driver.findElement(By.xpath(budgetMoneyInputXpath));
+            await budgetMoneyInputElement.sendKeys(data.excelConfig.budgetMoney);
             await driver.sleep(2000);
 
             const locationXpath = `//material-radio[.//div[text()='${data.excelConfig.locationCampaign}']]`;
