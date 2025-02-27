@@ -187,8 +187,6 @@ async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, use
                 return;
             }
 
-
-
             // Bấm vào Create a campaign without guidance
             await waitForElementOrTimeout(driver, "//selection-card[.//span[contains(text(), 'Create a campaign without guidance')]]", 1000, 5000);
             const selectCreateCampaignXpath = "//selection-card[.//span[contains(text(), 'Create a campaign without guidance')]]";
@@ -357,7 +355,7 @@ async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, use
             await enterTextIntoInput(driver, descriptionInput, data.excelConfig.description);
             await driver.sleep(2000);
 
-            const targetInputXpath = "//input[@aria-label='Target CPV bid in $']";
+            const targetInputXpath = "//input[contains(@aria-label, 'Target CPV bid in')]";
             await driver.executeScript(`
                         const element = document.evaluate("${targetInputXpath}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
                         if (element) {
