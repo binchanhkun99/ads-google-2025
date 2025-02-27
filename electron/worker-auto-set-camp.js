@@ -127,40 +127,64 @@ async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, use
             await driver.sleep(2000);
 
             const campaignsBtnCreateXPath = "(//material-fab[@role='button' and @aria-disabled='false'])[2]";
-            const checkCanCreateCamp = await waitForElementOrTimeout(driver, campaignsBtnCreateXPath, 1000, 10000);
-            if(!checkCanCreateCamp) {
-                updateStatus = "Error"
-                return;
-            }
+            const campaignsBtnCreateXPath2 = "//button[@aria-label='New campaign']";
 
-            //Click tạo mới chiến dịch
-            const campaignsCreateBtn = await driver.findElement(By.xpath(campaignsBtnCreateXPath));
-            await driver.executeScript(`
+            const checkCanCreateCamp = await waitForElementOrTimeout(driver, campaignsBtnCreateXPath, 1000, 6000);
+            const checkCanCreateCamp2 = await waitForElementOrTimeout(driver, campaignsBtnCreateXPath2, 1000, 6000);
+
+            if(checkCanCreateCamp) {
+                //Click tạo mới chiến dịch
+                const campaignsCreateBtn = await driver.findElement(By.xpath(campaignsBtnCreateXPath));
+                await driver.executeScript(`
                         const element = document.evaluate("${campaignsBtnCreateXPath}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
                         if (element) {
                             element.scrollIntoView({ behavior: "smooth", block: "center" });
                         }
                     `);
-            await driver.executeScript("arguments[0].click();", campaignsCreateBtn);
-            await driver.sleep(1000);
+                await driver.executeScript("arguments[0].click();", campaignsCreateBtn);
+                await driver.sleep(1000);
 
-            const campaignsBtnConfirmCreateXPath = "//material-select-item[@aria-label=\"New campaign\"]";
-            const campaignsConfirmCreateBtn = await driver.findElement(By.xpath(campaignsBtnConfirmCreateXPath));
-            await actions.move({ origin: campaignsConfirmCreateBtn }).click().perform();
-            await driver.sleep(2000);
-            //Click skip
-            const skipXpath = "//button[.//span[contains(text(), 'Skip')]]";
-            await driver.executeScript(`
+                const campaignsBtnConfirmCreateXPath = "//material-select-item[@aria-label=\"New campaign\"]";
+                const campaignsConfirmCreateBtn = await driver.findElement(By.xpath(campaignsBtnConfirmCreateXPath));
+                await actions.move({ origin: campaignsConfirmCreateBtn }).click().perform();
+                await driver.sleep(2000);
+                //Click skip
+                const skipXpath = "//button[.//span[contains(text(), 'Skip')]]";
+                await driver.executeScript(`
                         const element = document.evaluate("${skipXpath}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
                         if (element) {
                             element.scrollIntoView({ behavior: "smooth", block: "center" });
                         }
                     `);
-            await driver.sleep(4000);
+                await driver.sleep(4000);
 
-            const skipBtn = await driver.findElement(By.xpath(skipXpath));
-            await driver.executeScript("arguments[0].click();", skipBtn);
-            await driver.sleep(2000);
+                const skipBtn = await driver.findElement(By.xpath(skipXpath));
+                await driver.executeScript("arguments[0].click();", skipBtn);
+                await driver.sleep(2000);
+            }
+            else if(checkCanCreateCamp2){
+                //Click tạo mới chiến dịch
+                const campaignsCreateBtn2 = await driver.findElement(By.xpath(campaignsBtnCreateXPath2));
+                await driver.executeScript(`
+                        const element = document.evaluate("${campaignsBtnCreateXPath2}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                        if (element) {
+                            element.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
+                    `);
+                await driver.executeScript("arguments[0].click();", campaignsCreateBtn2);
+                await driver.sleep(1000);
+
+                const campaignsBtnConfirmCreateXPath = "//material-select-item[@aria-label=\"New campaign\"]";
+                const campaignsConfirmCreateBtn = await driver.findElement(By.xpath(campaignsBtnConfirmCreateXPath));
+                await actions.move({ origin: campaignsConfirmCreateBtn }).click().perform();
+                await driver.sleep(2000);
+            }
+            else {
+                updateStatus = "Error"
+                return;
+            }
+
+
 
             // Bấm vào Create a campaign without guidance
             await waitForElementOrTimeout(driver, "//selection-card[.//span[contains(text(), 'Create a campaign without guidance')]]", 1000, 5000);
