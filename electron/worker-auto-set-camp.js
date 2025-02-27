@@ -175,9 +175,12 @@ async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, use
                 await driver.sleep(1000);
 
                 const campaignsBtnConfirmCreateXPath = "//material-select-item[@aria-label=\"New campaign\"]";
-                const campaignsConfirmCreateBtn = await driver.findElement(By.xpath(campaignsBtnConfirmCreateXPath));
-                await actions.move({ origin: campaignsConfirmCreateBtn }).click().perform();
-                await driver.sleep(2000);
+                const checkCampaignsBtnConfirmCreateXPath = await waitForElementOrTimeout(driver, campaignsBtnConfirmCreateXPath, 1000, 6000);
+                if(checkCampaignsBtnConfirmCreateXPath){
+                    const campaignsConfirmCreateBtn = await driver.findElement(By.xpath(campaignsBtnConfirmCreateXPath));
+                    await actions.move({ origin: campaignsConfirmCreateBtn }).click().perform();
+                    await driver.sleep(2000);
+                }
             }
             else {
                 updateStatus = "Error"
