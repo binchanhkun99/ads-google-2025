@@ -363,7 +363,8 @@ async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, use
                         }
                     `);
             await driver.sleep(2000);
-            await enterTextIntoInput(driver, targetInputXpath, data.excelConfig.targetCPV);            await driver.sleep(2000);
+            const targetInputElement = await driver.findElement(By.xpath(targetInputXpath));
+            await targetInputElement.sendKeys(data.excelConfig.budgetMoney);
             await driver.sleep(2000);
 
             const campaignsBtnCreateFinalXPath = "//material-button[.//div[text()='Create campaign']]"
