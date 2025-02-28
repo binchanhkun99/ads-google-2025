@@ -219,15 +219,17 @@ async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, use
             await driver.sleep(2000);
 
             // Bấm vào tạo chiến dịch video
-            const videoCreateCampaignXpath = "//selection-card[@aria-label='Video']";
-            await driver.executeScript(`
+            const videoCreateCampaignXpath = "//selection-card[.//span[normalize-space(text())='Video']]";
+            const checkLabelVideo = await waitForElementOrTimeout(driver, videoCreateCampaignXpath, 1000, 3000)
+            if (checkLabelVideo) {
+                await driver.executeScript(`
                         const element = document.evaluate("${videoCreateCampaignXpath}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
                         if (element) {
                             element.scrollIntoView({ behavior: "smooth", block: "center" });
                         }
                     `);
-            await driver.sleep(3000);
-            await driver.executeScript(`
+                await driver.sleep(3000);
+                await driver.executeScript(`
             let xpath = "${videoCreateCampaignXpath}";
             let result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
             let element = result.singleNodeValue;
@@ -237,7 +239,32 @@ async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, use
                 throw new Error("Không tìm thấy phần tử với XPath: " + xpath);
             }
         `);
-            await driver.sleep(2000);
+                await driver.sleep(2000);
+            }
+            else {
+                const videoCreateCampaignXpathB = "//selection-card[.//span[normalize-space(text())='Video']]";
+
+                await driver.executeScript(`
+                        const element = document.evaluate("${videoCreateCampaignXpathB}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                        if (element) {
+                            element.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
+                    `);
+                await driver.sleep(3000);
+                await driver.executeScript(`
+            let xpath = "${videoCreateCampaignXpathB}";
+            let result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+            let element = result.singleNodeValue;
+            if (element) {
+                element.click();
+            } else {
+                throw new Error("Không tìm thấy phần tử với XPath: " + xpath);
+            }
+        `);
+                await driver.sleep(2000);
+            }
+
+
 
             // Bấm vào continue
             const continueCreateCampaignXpath = "//material-button[@aria-label='Continue to the next step']";
