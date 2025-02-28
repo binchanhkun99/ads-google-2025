@@ -242,7 +242,7 @@ async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, use
                 await driver.sleep(2000);
             }
             else {
-                const videoCreateCampaignXpathB = "//selection-card[.//span[normalize-space(text())='Video']]";
+                const videoCreateCampaignXpathB = "//selection-card[.//div[normalize-space(text())='Video']]";
 
                 await driver.executeScript(`
                         const element = document.evaluate("${videoCreateCampaignXpathB}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
