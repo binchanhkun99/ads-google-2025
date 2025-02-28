@@ -187,6 +187,15 @@ async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, use
                 return;
             }
 
+
+            const checkPanelXpath = '//material-button[contains(@aria-label, "Close Quick help panel'
+            const checkPanel = await waitForElementOrTimeout(driver, '//material-button[contains(@aria-label, "Close Quick help panel', 1000, 4000);
+            if (checkPanel) {
+                const checkPanelBtn = await driver.findElement(By.xpath(checkPanelXpath));
+                await driver.executeScript("arguments[0].click();", checkPanelBtn);
+                await driver.sleep(1000);
+            }
+
             // Bấm vào Create a campaign without guidance
             await waitForElementOrTimeout(driver, "//selection-card[.//span[contains(text(), 'Create a campaign without guidance')]]", 1000, 5000);
             const selectCreateCampaignXpath = "//selection-card[.//span[contains(text(), 'Create a campaign without guidance')]]";
