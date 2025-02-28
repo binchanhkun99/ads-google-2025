@@ -206,8 +206,16 @@ async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, use
                         }
                     `);
             await driver.sleep(3000);
-            const selectCreateCampaignBtn = await driver.findElement(By.xpath(selectCreateCampaignXpath));
-            await selectCreateCampaignBtn.click();
+            await driver.executeScript(`
+            let xpath = "${selectCreateCampaignXpath}";
+            let result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+            let element = result.singleNodeValue;
+            if (element) {
+                element.click();
+            } else {
+                throw new Error("Không tìm thấy phần tử với XPath: " + xpath);
+            }
+        `);
             await driver.sleep(2000);
 
             // Bấm vào tạo chiến dịch video
@@ -219,8 +227,16 @@ async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, use
                         }
                     `);
             await driver.sleep(3000);
-            const videoCreateCampaignBtn = await driver.findElement(By.xpath(videoCreateCampaignXpath));
-            await videoCreateCampaignBtn.click();
+            await driver.executeScript(`
+            let xpath = "${videoCreateCampaignXpath}";
+            let result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+            let element = result.singleNodeValue;
+            if (element) {
+                element.click();
+            } else {
+                throw new Error("Không tìm thấy phần tử với XPath: " + xpath);
+            }
+        `);
             await driver.sleep(2000);
 
             // Bấm vào continue
