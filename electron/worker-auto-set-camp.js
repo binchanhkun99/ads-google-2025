@@ -188,8 +188,8 @@ async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, use
             }
 
 
-            const checkPanelXpath = '//material-button[contains(@aria-label, "Close Quick help panel'
-            const checkPanel = await waitForElementOrTimeout(driver, '//material-button[contains(@aria-label, "Close Quick help panel', 1000, 4000);
+            const checkPanelXpath = '//material-button[contains(@aria-label, "Close Quick help panel)]'
+            const checkPanel = await waitForElementOrTimeout(driver, '//material-button[contains(@aria-label, "Close Quick help panel)]', 1000, 4000);
             if (checkPanel) {
                 const checkPanelBtn = await driver.findElement(By.xpath(checkPanelXpath));
                 await driver.executeScript("arguments[0].click();", checkPanelBtn);
