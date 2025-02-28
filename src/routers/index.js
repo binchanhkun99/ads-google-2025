@@ -1,19 +1,16 @@
-import { createRouter, createWebHistory } from 'vue-router';
+// router/index.js
+import { createRouter, createMemoryHistory } from 'vue-router';
+import Appeal from '@/views/Appeal.vue';
+import AutoSetCampaigns from '@/campaigns/index.vue';
 
 const routes = [
-    {
-        path: '/',
-        component: () => import('~/views/Appeal.vue'), // Hiển thị Home.vue khi vào /
-    },
-    {
-        path: '/auto-set-campaigns',
-        component: () => import('~/campaigns/index.vue'),
-    }
-]
+    { path: '/', component: Appeal },
+    { path: '/auto-set-campaigns', component: AutoSetCampaigns },
+];
 
 const router = createRouter({
+    history: createMemoryHistory(),
     routes,
-    history: createWebHistory(),
 });
 
 export default router;
