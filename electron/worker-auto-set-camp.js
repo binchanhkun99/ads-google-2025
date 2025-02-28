@@ -228,7 +228,6 @@ async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, use
             await driver.sleep(2000);
 
             if (data.excelConfig?.campaignName){
-                console.log("CO VAO DAYYYYY")
                 await waitForElementOrTimeout(driver, '//input[@aria-label="Campaign name"]')
                 const campaignNameInputXpath = "//input[@aria-label='Campaign name']";
                 await driver.executeScript(`
@@ -364,7 +363,7 @@ async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, use
                     `);
             await driver.sleep(2000);
             const targetInputElement = await driver.findElement(By.xpath(targetInputXpath));
-            await targetInputElement.sendKeys(data.excelConfig.budgetMoney);
+            await targetInputElement.sendKeys(data.excelConfig.targetCPV);
             await driver.sleep(2000);
 
             const campaignsBtnCreateFinalXPath = "//material-button[.//div[text()='Create campaign']]"
