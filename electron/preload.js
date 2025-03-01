@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     invokeReadFileReg: () => ipcRenderer.invoke('read-file-reg'),
     invokeSaveFileReg: (data) => ipcRenderer.invoke('save-file-reg', data),
+    invokeEditNameProfile: (id, name, apiUrl) => ipcRenderer.invoke('edit-name-profile', id, name, apiUrl),
 
     importExcelFile: () => ipcRenderer.invoke('import-excel-file'),
     readExcelSetup: () => ipcRenderer.invoke('read-excel-setup'),

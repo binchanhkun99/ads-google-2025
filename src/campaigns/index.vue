@@ -63,6 +63,17 @@
           >
           <Cpu class="w-5 h-5 absolute left-3 top-2.5 text-gray-400" />
         </div>
+        <div class="relative flex justify-center items-center">
+          <!--          <span>Số luồng</span>-->
+
+          <input
+              type="text"
+              placeholder="Nhập vào số luồng"
+              v-model="apiUrl"
+              class="w-full bg-gray-700 text-gray-100 px-4 py-2 rounded-md pl-10"
+          >
+          <Link class="w-5 h-5 absolute left-3 top-2.5 text-gray-400" />
+        </div>
       </div>
 
       <!-- Table với scroll và checkbox -->
@@ -84,7 +95,6 @@
               <th class="px-4 py-2 text-left w-16">OS</th>
               <th class="px-4 py-2 text-left w-32">Trạng thái</th>
               <th class="px-4 py-2 text-left w-40">Proxy</th>
-              <th class="px-4 py-2 text-left w-16">Ghi chú</th>
               <th class="px-4 py-2 text-right w-24">Actions</th>
             </tr>
             </thead>
@@ -101,16 +111,17 @@
               <td class="px-4 py-3">
                 <div class="flex items-center space-x-2">
                   <div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-xs">
-                    127
+                    130
                   </div>
                   <span class="truncate">{{ profile.name }}</span>
-                  <PencilIcon class="w-4 h-4 text-gray-400" />
+                  <PencilIcon @click="() => {showPopup = true;
+                  idEdit = profile.id}" class="w-4 h-4 text-gray-400 cursor-pointer" />
                 </div>
               </td>
-              <td class="px-4 py-3">
+              <td class="px-4 py-3 cursor-pointer">
                 <FolderIcon class="w-4 h-4 text-gray-400" />
               </td>
-              <td class="px-4 py-3">
+              <td class="px-4 py-3 cursor-pointer">
                 <WindowsIcon class="w-4 h-4 text-gray-400" />
               </td>
               <td class="px-4 py-3 text-lg whitespace-nowrap">
@@ -122,12 +133,13 @@
               <td class="px-4 py-3 truncate" :title="profile.raw_proxy || 'Local IP'">
                 {{ profile.raw_proxy || 'Local IP' }}
               </td>
-              <td class="px-4 py-3">
-                <PencilIcon class="w-4 h-4 text-gray-400" />
-              </td>
+
               <td class="px-4 py-3 text-right">
-                <button @click="openProfile(profile.id)" class="bg-emerald-500 hover:bg-emerald-600 px-3 py-1 rounded text-sm">
+                <button v-if="!profile.open" @click="openProfile(profile.id)" class="bg-emerald-500 hover:bg-emerald-600 px-3 py-1 rounded text-sm">
                   Mở
+                </button>
+                <button v-else @click="closeProfile(profile.id)" class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm">
+                 Tắt
                 </button>
               </td>
             </tr>
@@ -170,12 +182,18 @@
         </div>
       </div>
     </div>
+    <EditModal
+        v-if="showPopup"
+        @close="showPopup = false"
+        @confirm="handleConfirm"/>
   </div>
 </template>
 
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import EditModal from "@/components/edit-profile-modal.vue"
+
 import { notify } from "@kyvg/vue3-notification";
 
 import {
@@ -183,6 +201,7 @@ import {
   ArrowLeftToLine,
   Users,
   Cpu,
+  Link,
   FileText as FileIcon,
   Pencil as PencilIcon,
   Folder as FolderIcon,
@@ -190,6 +209,7 @@ import {
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
 } from 'lucide-vue-next'
+import axios from "axios";
 
 const apiUrl = ref('http://127.0.0.1:19995')
 const profiles = ref([])
@@ -202,7 +222,43 @@ const isLastPage = ref(false)
 const selectAll = ref(false)
 let updateProfileDataListener = null;
 const excelData = ref(null)
+const showPopup = ref(false)
+const idEdit = ref()
+const handleConfirm = async (inputValue) => {
+  console.log('Confirmed with value:', inputValue)
 
+  try{
+
+    const res = window.electronAPI.invokeEditNameProfile(idEdit.value, inputValue, apiUrl.value)
+
+    if (res) {
+      notify({
+        type: 'success',
+        title: "Thành công",
+        text: "Đổi tên thành công"
+      });
+      await callAPI(idGroup.value)
+
+    }
+    else {
+      notify({
+        type: 'error',
+        title: "Lỗi",
+        text: "Dã xẩy ra lỗi vui lòng thử lại sau",
+      });
+    }
+  }catch(error){
+    notify({
+      type: 'error',
+      title: "Lỗi",
+      text: "Dã xẩy ra lỗi vui lòng thử lại sau",
+    });
+  }finally {
+    showPopup.value = false
+
+  }
+
+}
 const selectedProfiles = computed(() => profiles.value.filter(profile => profile.selected))
 
 const selectGroup = async () => {
@@ -262,14 +318,16 @@ const updateSelectAllState = () => {
 const updateSelectedProfiles = () => {
   updateSelectAllState()
 }
+const isOpen = ref(true)
 async function openProfile(id) {
   try {
     const rs = await window.electronAPI.openProfile(id, apiUrl.value);
+    console.log(rs.success)
     if (rs.success) {
       profiles.value.forEach(item => {
-        // if (item.id === id) {
-        //   item.open = isOpen.value;
-        // }
+        if (item.id === id) {
+          item.open = isOpen.value;
+        }
       });
     }
   } catch (error) {
@@ -282,7 +340,22 @@ async function openProfile(id) {
   }
 
 }
+async function closeProfile(id) {
+  try {
+    const rs = await window.electronAPI.closeProfile(id, apiUrl.value);
+    if (rs.success) {
+      profiles.value.forEach(item => {
+        if (item.id === id) {
+          item.open = !isOpen.value;
+        }
+      });
+    }
 
+  } catch (error) {
+    console.log(error);
+
+  }
+}
 const numberThreads = ref(5)
 const setupFromExcel = async () => {
   try {
@@ -324,7 +397,10 @@ const setupFromExcel = async () => {
   } finally {
     isLoading.value = false;
   }
-};const autoSetCamp = () => {
+};
+
+
+const autoSetCamp = () => {
   const selectedProfilesData = profiles.value.filter(profile => profile.selected);
   if (selectedProfilesData.length <= 0) {
     notify({

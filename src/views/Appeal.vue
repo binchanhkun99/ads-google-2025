@@ -527,8 +527,6 @@ async function openMultipleProfile() {
       }
     });
 
-    // In ra kết quả sau khi cập nhật
-    console.log("Cập nhật với trường .open:", dataProfile.value);
 
   } catch (error) {
     // Xử lý lỗi nếu có

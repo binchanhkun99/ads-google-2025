@@ -46,7 +46,7 @@ function createWindow() {
             },
         ];
         const menu = Menu.buildFromTemplate(template);
-        Menu.setApplicationMenu(null);  // Áp dụng menu vào ứng dụng
+        Menu.setApplicationMenu(menu);  // Áp dụng menu vào ứng dụng
     } catch (e) {
         console.log(e)
     }
@@ -67,6 +67,22 @@ app.whenReady().then(() => {
 app.on("window-all-closed", () => {
     if (process.platform !== "darwin") {
         app.quit();
+    }
+});
+
+
+ipcMain.handle('edit-name-profile', async (event, id, name, apiUrl) => {
+    try {
+        const response = await axios.post(`${apiUrl}/api/v3/profiles/update/${id}`, {
+            profile_name:name,
+        });
+
+       if (response.data.success){
+           return response.data.success
+       }
+       else return false;
+    } catch (error) {
+        return {error: error.message};
     }
 });
 
