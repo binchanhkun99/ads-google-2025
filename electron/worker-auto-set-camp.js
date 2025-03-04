@@ -433,56 +433,55 @@ async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, use
             if (!checkSuccess) {
                 updateStatus = "Error"
             }
-            await driver.sleep(10000);
+            await driver.sleep(5000);
             await driver.get("https://ads.google.com/nav/selectaccount");
             await driver.sleep(4000);
 
         }
 
-        await driver.get("https://ads.google.com/aw/campaigns");
-        await driver.sleep(3500);
-        await driver.manage().addCookie({
-            name: 'AdsUserLocale',
-            value: 'en',
-            domain: '.ads.google.com',
-            path: '/',
-            secure: true,
-            sameSite: 'Strict'
-        });
-        await driver.sleep(2000);
 
-        await driver.executeScript("location.reload()");
-        await driver.sleep(2000);
+        for (let item of listAccountBanned) {
+            await waitForElementOrTimeout(driver, `//material-list-item[contains(@class, "user-customer-list-item") and .//span[text()='${item}']]`);
+            const xpathFirst = await driver.findElement(By.xpath(`//material-list-item[contains(@class, "user-customer-list-item") and .//span[text()='${item}']]`));
+            await xpathFirst.click();
+            await driver.sleep(4500);
+            await driver.manage().addCookie({
+                name: 'AdsUserLocale',
+                value: 'en',
+                domain: '.ads.google.com',
+                path: '/',
+                secure: true,
+                sameSite: 'Strict'
+            });
+            await driver.sleep(2000);
 
-        await waitForElementOrTimeout(driver, "//mat-checkbox[@aria-label='Select all rows']");
-        // Bấm vào chọn tất cả----------------------
-        const checkAllBtnXpath = "//mat-checkbox[@aria-label='Select all rows']"
-        const checkAllBtn = await driver.findElement(By.xpath(checkAllBtnXpath));
-        await driver.executeScript(`
+            await driver.executeScript("location.reload()");
+            await driver.sleep(2000);
+            await waitForElementOrTimeout(driver, "//mat-checkbox[@aria-label='Select all rows']");
+            // Bấm vào chọn tất cả----------------------
+            const checkAllBtnXpath = "//mat-checkbox[@aria-label='Select all rows']"
+            const checkAllBtn = await driver.findElement(By.xpath(checkAllBtnXpath));
+            await driver.executeScript(`
                         const element = document.evaluate("${checkAllBtnXpath}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
                         if (element) {
                             element.scrollIntoView({ behavior: "smooth", block: "center" });
                         }
                     `);
-        await driver.executeScript("arguments[0].click();", checkAllBtn);
-        await driver.sleep(1000);
+            await driver.executeScript("arguments[0].click();", checkAllBtn);
+            await driver.sleep(1000);
 
-        // Bâm vào Edit-------------------------
-        const editBtnXpath = "//material-button[@aria-label='Bulk edit']"
-        const editBtn = await driver.findElement(By.xpath(editBtnXpath));
-        await driver.executeScript("arguments[0].click();", editBtn);
-        await driver.sleep(1500);
+            // Bâm vào Edit-------------------------
+            const editBtnXpath = "//material-button[@aria-label='Bulk edit']"
+            const editBtn = await driver.findElement(By.xpath(editBtnXpath));
+            await driver.executeScript("arguments[0].click();", editBtn);
+            await driver.sleep(1500);
 
-        // Bấm vào tạm dừng-------------------------
-        const pauseBtnXpath = "//material-select-item[.//span[@text='Pause']]"
-        const pauseBtn = await driver.findElement(By.xpath(pauseBtnXpath));
-        await driver.executeScript("arguments[0].click();", pauseBtn);
-        await driver.sleep(4000);
-
-
-
-
-
+            // Bấm vào tạm dừng-------------------------
+            const pauseBtnXpath = "//material-select-item[.//span[@text='Pause']]"
+            const pauseBtn = await driver.findElement(By.xpath(pauseBtnXpath));
+            await driver.executeScript("arguments[0].click();", pauseBtn);
+            await driver.sleep(4000);
+        }
 
     } catch (error) {
         console.log(error);
