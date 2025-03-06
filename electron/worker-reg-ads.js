@@ -743,9 +743,11 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user, c
                 return;
             }
 
+            console.log("Da den day")
             const checkIfIndi = await waitForElementOrTimeoutReg(driver, "//iframe[contains(@src, 'https://payments.google.com/gp/w/u/0/identityverification')]")
 
             if(checkIfIndi){
+                console.log("vao day a nguuuu")
                 await driver.switchTo().frame(
                     await driver.findElement(By.xpath("//iframe[contains(@src, 'https://payments.google.com/gp/w/u/0/identityverification')]"))
                 );
@@ -760,6 +762,7 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user, c
             //-------------------Form Tell us about your organization --------------------------------
             const checkStepVeri1 = await waitForElementOrTimeoutReg(driver, `//material-radio[.//simple-html[.//span[text()='${formData.exampleOrganizationAds}']]]`, 1000, 4000)
             if(checkStepVeri1){
+                console.log("Vafo step 1")
                 const xpathOrganizationAds = `//material-radio[.//simple-html[.//span[text()='${formData.exampleOrganizationAds}']]]//div[contains(@class, 'icon-container')]`;
                 const OrganizationAdsBtn = await driver.findElement(By.xpath(xpathOrganizationAds));
                 await OrganizationAdsBtn.click();
@@ -828,26 +831,27 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user, c
                 await driver.sleep(3000);
                 await driver.switchTo().defaultContent();
                 await driver.sleep(2000);
-                const checkNoti = await waitForElementOrTimeoutReg(driver, "//iframe[contains(@src, 'https://payments.google.com/gp/w/u/0/identityverification')]", 1000, 8000)
-                if (!checkNoti) {
-                    updateStatus = "Error"
-                    return
-                }
+
             }
-            // Chuyển vào iframe
-            await driver.switchTo().frame(
-                await driver.findElement(By.xpath("//iframe[contains(@src, 'https://payments.google.com/gp/w/u/0/identityverification')]"))
-            );
-            const xpathStartVerifyBtn = "//button[.//span[text()='Start verification']]"
-            const StartVerifyBtn = await driver.findElement(By.xpath(xpathStartVerifyBtn))
-            await driver.executeScript("arguments[0].scrollIntoView(true);", StartVerifyBtn);
-            await driver.sleep(500);
-            await driver.executeScript("arguments[0].click();", StartVerifyBtn);
-            await driver.sleep(5000);
-            //-------------------Chuyển khung--------------------------------
-            const xpathInput1 = "//input[1]"
-            // Dùng executeScript để nhập giá trị
-            await driver.executeScript(`
+
+            const checkNoti = await waitForElementOrTimeoutReg(driver, "//iframe[contains(@src, 'https://payments.google.com/gp/w/u/0/identityverification')]", 1000, 8000)
+            if (checkNoti) {
+                await driver.switchTo().frame(
+                    await driver.findElement(By.xpath("//iframe[contains(@src, 'https://payments.google.com/gp/w/u/0/identityverification')]"))
+                );
+                const xpathStartVerifyBtn = "//button[.//span[text()='Start verification']]"
+                const checkStepVeri2 = await waitForElementOrTimeoutReg(driver, xpathStartVerifyBtn)
+                if (!checkStepVeri2) {
+                    console.log("vafo step 2")
+                    const StartVerifyBtn = await driver.findElement(By.xpath(xpathStartVerifyBtn))
+                    await driver.executeScript("arguments[0].scrollIntoView(true);", StartVerifyBtn);
+                    await driver.sleep(500);
+                    await driver.executeScript("arguments[0].click();", StartVerifyBtn);
+                    await driver.sleep(5000);
+                    //-------------------Chuyển khung--------------------------------
+                    const xpathInput1 = "//input[1]"
+                    // Dùng executeScript để nhập giá trị
+                    await driver.executeScript(`
     const element = document.evaluate(arguments[0], document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
     if (element) {
         element.click()
@@ -857,94 +861,97 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user, c
         console.error('Không tìm thấy phần tử với XPath:', arguments[0]);
     }
 `, xpathInput1, `${formData.exampleOrganizationName}`);
-            await driver.sleep(2000);
-            const xpathInputAddress = "/html/body/div[1]/c-wiz/div/div/c-wiz/div/c-wiz/div[1]/div/div[1]/div/div/div/div/div[1]/div[3]/div/div[2]/div/div/div[1]/label/input";
-            const xpathInputAddressFind = await driver.findElement(By.xpath(xpathInputAddress))
-            await driver.executeScript("arguments[0].scrollIntoView(true);", xpathInputAddressFind);
-            // Dùng executeScript để nhập giá trị
-            await enterTextIntoInput(driver, xpathInputAddressFind, formData.exampleAddress);
-
-            await driver.sleep(2000);
-
-            const xpathInput2 = "/html/body/div[1]/c-wiz/div/div/c-wiz/div/c-wiz/div[1]/div/div[1]/div/div/div/div/div[1]/div[3]/div/div[4]/div/div/div[1]/label/input";
-            const xpathInput2Find = await driver.findElement(By.xpath(xpathInput2))
-            await driver.executeScript("arguments[0].scrollIntoView(true);", xpathInput2Find);
-            console.log("_____City", formData.exampleCity)
-            await enterTextIntoInput(driver, xpathInput2Find, formData.exampleCity);
-
-            await driver.sleep(2000);
-            //-------------------Chọn doanh nghiệp hay cá nhân--------------------------------
-            const elementClickState = await driver.findElement(By.xpath("//div[contains(@class, 'VfPpkd-TkwUic')]"));
-            await driver.sleep(2000);
-            await driver.executeScript("arguments[0].scrollIntoView(true);", elementClickState);
-            await driver.executeScript("arguments[0].focus();", elementClickState);
-            await driver.executeScript("arguments[0].click();", elementClickState);
-            await driver.sleep(2000);
-            const xpathState = `//li[.//span[normalize-space(text())='${formData.exampleState}']]`;
-            const btnState = await driver.findElement(By.xpath(xpathState));
-            await driver.executeScript("arguments[0].click();", btnState);
-            await driver.sleep(2000);
-            const xpathInput3 = "/html/body/div[1]/c-wiz/div/div/c-wiz/div/c-wiz/div[1]/div/div[1]/div/div/div/div/div[1]/div[3]/div/div[5]/div[2]/div/div/div[1]/label/input";
-            const xpathInput3Find = await driver.findElement(By.xpath(xpathInput3))
-            console.log("_____Zipcode", formData.exampleZipCode2)
-            await driver.executeScript("arguments[0].scrollIntoView(true);", xpathInput3Find);
-            // Dùng executeScript để nhập giá trị
-            await enterTextIntoInput(driver, xpathInput3Find, formData.exampleZipCode2);
-
-            await driver.sleep(2000);
-            //-------------------Bấm vào submit--------------------------------
-            const xpathSubmit = "//button[.//span[text()='Submit']]";
-            const btnSubmitVerify =  await driver.findElement(By.xpath(xpathSubmit));
-            await driver.executeScript("arguments[0].scrollIntoView(true);", btnSubmitVerify);
-            await driver.executeScript("arguments[0].click();", btnSubmitVerify);
-            await driver.sleep(2000);
-            await waitForElementOrTimeoutReg(driver, "//iframe[contains(@src, 'https://payments.google.com/gp/w/u/0/modaliframe?')]", 1000, 10000);
-            await driver.switchTo().defaultContent();
-            await driver.switchTo().frame(await driver.findElement(By.xpath("//iframe[contains(@src, 'https://payments.google.com/gp/w/u/0/modaliframe?')]")));
-            await driver.sleep(4000);
-            //-------------------Bấm vào submit--------------------------------
-            const checkCorrect = await waitForElementOrTimeoutReg(driver, "//button[.//span[contains(text(), 'Yes,')]]", 1000, 5000)
-            if (checkCorrect) {
-                const xpathCorrectBtn = "//button[.//span[contains(text(), 'Yes,')]]"
-                const correctBtn = await driver.findElement(By.xpath(xpathCorrectBtn));
-                await driver.executeScript("arguments[0].click();", correctBtn);
-            }
-            else {
-                const xpathConfirm = "//button[.//span[text()='Confirm']]";
-                const btnConfirm = await driver.findElement(By.xpath(xpathConfirm));
-                await driver.executeScript("arguments[0].click();", btnConfirm);
-            }
-            await driver.sleep(4500);
-            await driver.wait(async () => {
-                const readyState = await driver.executeScript("return document.readyState;");
-                return readyState === "complete";
-            }, 10000);
-            await driver.switchTo().defaultContent();
-            await driver.sleep(2000);
-            await driver.manage().addCookie({
-                name: 'AdsUserLocale',
-                value: 'en',
-                domain: '.ads.google.com',
-                path: '/',
-                secure: true,
-                sameSite: 'Strict'
-            });
-            // Tải lại trang để cookie có hiệu lực
-            await driver.executeScript("location.reload()")
-            const xpathStartProvide = '//button[.//span[text()="Start task"]]'
-            const checkStartFn = await waitForElementOrTimeoutReg(driver, xpathStartProvide, 1000, 10000);
-            if (!checkStartFn) {
-                const checkStartFnCase2 = await waitForElementOrTimeoutReg(driver,"//button[.//span[text()='Get started'] and contains(@class, 'action-button')]", 1000, 10000);
-                if (checkStartFnCase2) {
-                    const startStartProvideBtnCase2 = await driver.findElement(By.xpath("//button[.//span[text()='Get started'] and contains(@class, 'action-button')]"));
-                    await driver.executeScript("arguments[0].click();", startStartProvideBtnCase2);
                     await driver.sleep(2000);
+                    const xpathInputAddress = "/html/body/div[1]/c-wiz/div/div/c-wiz/div/c-wiz/div[1]/div/div[1]/div/div/div/div/div[1]/div[3]/div/div[2]/div/div/div[1]/label/input";
+                    const xpathInputAddressFind = await driver.findElement(By.xpath(xpathInputAddress))
+                    await driver.executeScript("arguments[0].scrollIntoView(true);", xpathInputAddressFind);
+                    // Dùng executeScript để nhập giá trị
+                    await enterTextIntoInput(driver, xpathInputAddressFind, formData.exampleAddress);
+
+                    await driver.sleep(2000);
+
+                    const xpathInput2 = "/html/body/div[1]/c-wiz/div/div/c-wiz/div/c-wiz/div[1]/div/div[1]/div/div/div/div/div[1]/div[3]/div/div[4]/div/div/div[1]/label/input";
+                    const xpathInput2Find = await driver.findElement(By.xpath(xpathInput2))
+                    await driver.executeScript("arguments[0].scrollIntoView(true);", xpathInput2Find);
+                    console.log("_____City", formData.exampleCity)
+                    await enterTextIntoInput(driver, xpathInput2Find, formData.exampleCity);
+
+                    await driver.sleep(2000);
+                    //-------------------Chọn doanh nghiệp hay cá nhân--------------------------------
+                    const elementClickState = await driver.findElement(By.xpath("//div[contains(@class, 'VfPpkd-TkwUic')]"));
+                    await driver.sleep(2000);
+                    await driver.executeScript("arguments[0].scrollIntoView(true);", elementClickState);
+                    await driver.executeScript("arguments[0].focus();", elementClickState);
+                    await driver.executeScript("arguments[0].click();", elementClickState);
+                    await driver.sleep(2000);
+                    const xpathState = `//li[.//span[normalize-space(text())='${formData.exampleState}']]`;
+                    const btnState = await driver.findElement(By.xpath(xpathState));
+                    await driver.executeScript("arguments[0].click();", btnState);
+                    await driver.sleep(2000);
+                    const xpathInput3 = "/html/body/div[1]/c-wiz/div/div/c-wiz/div/c-wiz/div[1]/div/div[1]/div/div/div/div/div[1]/div[3]/div/div[5]/div[2]/div/div/div[1]/label/input";
+                    const xpathInput3Find = await driver.findElement(By.xpath(xpathInput3))
+                    console.log("_____Zipcode", formData.exampleZipCode2)
+                    await driver.executeScript("arguments[0].scrollIntoView(true);", xpathInput3Find);
+                    // Dùng executeScript để nhập giá trị
+                    await enterTextIntoInput(driver, xpathInput3Find, formData.exampleZipCode2);
+
+                    await driver.sleep(2000);
+                    //-------------------Bấm vào submit--------------------------------
+                    const xpathSubmit = "//button[.//span[text()='Submit']]";
+                    const btnSubmitVerify =  await driver.findElement(By.xpath(xpathSubmit));
+                    await driver.executeScript("arguments[0].scrollIntoView(true);", btnSubmitVerify);
+                    await driver.executeScript("arguments[0].click();", btnSubmitVerify);
+                    await driver.sleep(2000);
+                    await waitForElementOrTimeoutReg(driver, "//iframe[contains(@src, 'https://payments.google.com/gp/w/u/0/modaliframe?')]", 1000, 10000);
+                    await driver.switchTo().defaultContent();
+                    await driver.switchTo().frame(await driver.findElement(By.xpath("//iframe[contains(@src, 'https://payments.google.com/gp/w/u/0/modaliframe?')]")));
+                    await driver.sleep(4000);
+                    //-------------------Bấm vào submit--------------------------------
+                    const checkCorrect = await waitForElementOrTimeoutReg(driver, "//button[.//span[contains(text(), 'Yes,')]]", 1000, 5000)
+                    if (checkCorrect) {
+                        const xpathCorrectBtn = "//button[.//span[contains(text(), 'Yes,')]]"
+                        const correctBtn = await driver.findElement(By.xpath(xpathCorrectBtn));
+                        await driver.executeScript("arguments[0].click();", correctBtn);
+                    }
+                    else {
+                        const xpathConfirm = "//button[.//span[text()='Confirm']]";
+                        const btnConfirm = await driver.findElement(By.xpath(xpathConfirm));
+                        await driver.executeScript("arguments[0].click();", btnConfirm);
+                    }
+                    await driver.sleep(4500);
+                    await driver.wait(async () => {
+                        const readyState = await driver.executeScript("return document.readyState;");
+                        return readyState === "complete";
+                    }, 10000);
+                    await driver.switchTo().defaultContent();
+                    await driver.sleep(2000);
+                    await driver.manage().addCookie({
+                        name: 'AdsUserLocale',
+                        value: 'en',
+                        domain: '.ads.google.com',
+                        path: '/',
+                        secure: true,
+                        sameSite: 'Strict'
+                    });
+                    // Tải lại trang để cookie có hiệu lực
+                    await driver.executeScript("location.reload()")
+                    const xpathStartProvide = '//button[.//span[text()="Start task"]]'
+                    const checkStartFn = await waitForElementOrTimeoutReg(driver, xpathStartProvide, 1000, 10000);
+                    if (!checkStartFn) {
+                        const checkStartFnCase2 = await waitForElementOrTimeoutReg(driver,"//button[.//span[text()='Get started'] and contains(@class, 'action-button')]", 1000, 10000);
+                        if (checkStartFnCase2) {
+                            const startStartProvideBtnCase2 = await driver.findElement(By.xpath("//button[.//span[text()='Get started'] and contains(@class, 'action-button')]"));
+                            await startStartProvideBtnCase2.click();
+                            await driver.sleep(2000);
+                        }
+                    }
+                    else {
+                        const startStartProvideBtn = await driver.findElement(By.xpath(xpathStartProvide));
+                        await startStartProvideBtn.click();
+                        await driver.sleep(2000);
+                    }
                 }
-            }
-            else {
-                const startStartProvideBtn = await driver.findElement(By.xpath(xpathStartProvide));
-                await driver.executeScript("arguments[0].click();", startStartProvideBtn);
-                await driver.sleep(2000);
+
             }
 
             const tabs = await driver.getAllWindowHandles();
