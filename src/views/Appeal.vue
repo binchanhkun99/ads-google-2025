@@ -16,6 +16,12 @@ const idGroup = ref('')
 const isPopupOpen1 = ref(false);
 const selectedOption = ref(null);
 
+const currentPage = ref(1);
+const perPage = ref(10);
+const totalPages = ref(1);
+const isLastPage = ref(false);
+
+
 const options = [
   { value: 'regFull', display: 'Chạy full' },
   { value: 'onlyReg', display: 'Chỉ chạy reg' },
@@ -376,27 +382,62 @@ const callAPI = async (idValue) => {
         idGroup.value = id
       }
       console.log(apiUrl.value)
-      const result = await window.electronAPI.fetchAPI(`${apiUrl.value}/api/v3/profiles?group_id=${id || 1}&page=1&per_page=100`);
-      // Kiểm tra dữ liệu có hợp lệ không, sau đó thêm trường `selected` vào mỗi phần tử
+      const result = await window.electronAPI.fetchAPI(
+          `${apiUrl.value}/api/v3/profiles?group_id=${id || 1}&page=${currentPage.value}&per_page=${perPage.value}`
+      );
+
+      // Check if data is valid, then add 'selected' field to each element
       if (result.data && Array.isArray(result.data)) {
         dataProfile.value = result.data.map(item => ({...item, selected: false}));
+        // Update pagination info
+        isLastPage.value = result.data.length < perPage.value;
+        totalPages.value = isLastPage.value ? currentPage.value : '∞';
       } else {
-        // Nếu dữ liệu không hợp lệ
+        // If data is invalid
         dataProfile.value = [];
+        isLastPage.value = true;
+        totalPages.value = currentPage.value || 1;
       }
     } else {
-      const result = await window.electronAPI.fetchAPI(`${apiUrl.value}/api/v3/profiles?group_id=${idValue}&page=1&per_page=100`);
+      const result = await window.electronAPI.fetchAPI(
+          `${apiUrl.value}/api/v3/profiles?group_id=${idValue}&page=${currentPage.value}&per_page=${perPage.value}`
+      );
       if (result.data && Array.isArray(result.data)) {
         dataProfile.value = result.data.map(item => ({...item, selected: false}));
+        // Update pagination info
+        isLastPage.value = result.data.length < perPage.value;
+        totalPages.value = isLastPage.value ? currentPage.value : '∞';
       } else {
-        // Nếu dữ liệu không hợp lệ
+        // If data is invalid
         dataProfile.value = [];
+        isLastPage.value = true;
+        totalPages.value = currentPage.value || 1;
       }
     }
-
   } catch (error) {
     console.log(error);
+    dataProfile.value = [];
+    isLastPage.value = true;
+    totalPages.value = currentPage.value || 1;
   }
+};
+const prevPage = async () => {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+    await callAPI(idGroup.value);
+  }
+};
+
+const nextPage = async () => {
+  if (!isLastPage.value) {
+    currentPage.value++;
+    await callAPI(idGroup.value);
+  }
+};
+
+const updatePagination = async () => {
+  currentPage.value = 1;
+  await callAPI(idGroup.value);
 };
 
 
@@ -829,9 +870,48 @@ onUnmounted(() => {
               </tbody>
             </table>
           </div>
+          <!-- Pagination -->
+          <div class="flex items-center justify-between mt-4">
+            <div class="flex items-center space-x-2">
+              <button
+                  @click="prevPage"
+                  :disabled="currentPage === 1"
+                  class="bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded-md disabled:opacity-50"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
+              <span>{{ currentPage }} / {{ totalPages }}</span>
+              <button
+                  @click="nextPage"
+                  :disabled="isLastPage"
+                  class="bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded-md disabled:opacity-50"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
+            <div class="flex items-center space-x-2 w-1/2">
+              <span class="w-4/5">Số profile trên mỗi trang</span>
+              <select
+                  v-model="perPage"
+                  @change="updatePagination"
+                  class="bg-gray-700 text-gray-100 px-2 p2 py-1 !w-1/4 rounded-md"
+              >
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+          </div>
         </div>
 
       </div>
+
+
     </div>
     <!-- Popup -->
     <div v-if="isPopupOpen" class="popup-overlay">
