@@ -262,69 +262,84 @@ async function processVeri(driverPath, remoteDebuggingAddress, profileId, user) 
             }
             await driver.sleep(4500);
             //-------------------Form Tell us about your organization --------------------------------
-            await waitForElementOrTimeoutReg(driver, `//material-radio[.//simple-html[.//span[text()='${formData.exampleOrganizationAds}']]]`, 1000, 4000)
-            const xpathOrganizationAds = `//material-radio[.//simple-html[.//span[text()='${formData.exampleOrganizationAds}']]]//div[contains(@class, 'icon-container')]`;
-            const OrganizationAdsBtn = await driver.findElement(By.xpath(xpathOrganizationAds));
-            await OrganizationAdsBtn.click();
-            await driver.sleep(2000);
+            const checkStepVeri1 = await waitForElementOrTimeoutReg(driver, `//material-radio[.//simple-html[.//span[text()='${formData.exampleOrganizationAds}']]]`, 1000, 4000)
+            if(checkStepVeri1){
+                const xpathOrganizationAds = `//material-radio[.//simple-html[.//span[text()='${formData.exampleOrganizationAds}']]]//div[contains(@class, 'icon-container')]`;
+                const OrganizationAdsBtn = await driver.findElement(By.xpath(xpathOrganizationAds));
+                await OrganizationAdsBtn.click();
+                await driver.sleep(2000);
 
-            if(formData.exampleOrganizationAds==='Yes'){
-                if(formData.exampleWantVerifyToday==='My agency'){
-                    const xpathWantVerifyToday = `//material-radio[.//simple-html[.//span[text()='${formData.exampleWantVerifyToday}']]]`
-                    const WantVerifyTodayBtn = await driver.findElement(By.xpath(xpathWantVerifyToday));
-                    await WantVerifyTodayBtn.click();
-                }else if(formData.exampleWantVerifyToday==='A client'){
-                    const xpathWantVerifyToday = `//material-radio[.//simple-html[.//span[text()='${formData.exampleWantVerifyToday}']]]`
-                    const WantVerifyTodayBtn = await driver.findElement(By.xpath(xpathWantVerifyToday));
-                    await WantVerifyTodayBtn.click();
-                    await driver.sleep(2000);
-                    const xpathAgencyPayFor = `//material-radio[.//simple-html[.//span[text()='${formData.exampleAgencyPayFor}']]]`
-                    const agencyPayForBtn = await driver.findElement(By.xpath(xpathAgencyPayFor));
-                    await agencyPayForBtn.click();
+                if(formData.exampleOrganizationAds==='Yes'){
+                    if(formData.exampleWantVerifyToday==='My agency'){
+                        const xpathWantVerifyToday = `//material-radio[.//simple-html[.//span[text()='${formData.exampleWantVerifyToday}']]]`
+                        const WantVerifyTodayBtn = await driver.findElement(By.xpath(xpathWantVerifyToday));
+                        await WantVerifyTodayBtn.click();
+                    }else if(formData.exampleWantVerifyToday==='A client'){
+                        const xpathWantVerifyToday = `//material-radio[.//simple-html[.//span[text()='${formData.exampleWantVerifyToday}']]]`
+                        const WantVerifyTodayBtn = await driver.findElement(By.xpath(xpathWantVerifyToday));
+                        await WantVerifyTodayBtn.click();
+                        await driver.sleep(2000);
+                        const xpathAgencyPayFor = `//material-radio[.//simple-html[.//span[text()='${formData.exampleAgencyPayFor}']]]`
+                        const agencyPayForBtn = await driver.findElement(By.xpath(xpathAgencyPayFor));
+                        await agencyPayForBtn.click();
+                    }
+
+
+                }else if(formData.exampleOrganizationAds==='No'){
+
+                    const xpathWhoPayFor = `//material-radio[.//simple-html[.//span[text()='${formData.exampleWhoPayFor}']]]`
+                    const agencyWhoPayForBtn = await driver.findElement(By.xpath(xpathWhoPayFor));
+                    await agencyWhoPayForBtn.click();
+
                 }
+                await driver.sleep(2000);
+                //-------------------Save and continued--------------------------------
+                const xpathSaveAndContinue = "//material-button[.//div[text()='Save & Continue']]"
+                const SaveAndContinueBtn = await driver.findElement(By.xpath(xpathSaveAndContinue));
+                await SaveAndContinueBtn.click();
 
-
-            }else if(formData.exampleOrganizationAds==='No'){
-
-                const xpathWhoPayFor = `//material-radio[.//simple-html[.//span[text()='${formData.exampleWhoPayFor}']]]`
-                const agencyWhoPayForBtn = await driver.findElement(By.xpath(xpathWhoPayFor));
-                await agencyWhoPayForBtn.click();
-
-            }
-            await driver.sleep(2000);
-            //-------------------Save and continued--------------------------------
-            const xpathSaveAndContinue = "//material-button[.//div[text()='Save & Continue']]"
-            const SaveAndContinueBtn = await driver.findElement(By.xpath(xpathSaveAndContinue));
-            await SaveAndContinueBtn.click();
-
-            const btnProvideInfoCheck = await waitForElementOrTimeoutReg(driver, "(//in-progress-task-item//button[.//span[text()='Start task']])[1]", 1000, 8000)
-            if(!btnProvideInfoCheck) {
-                const verifyYourAgency = await waitForElementOrTimeoutReg(driver, "//verification-task-list-item[.//span[text()='Get started'] and .//span[text()='Verify your agency']]", 1000, 4000)
-                if (verifyYourAgency){
-                    const xpathYACBtn = "//verification-task-list-item[.//span[text()='Get started'] and .//span[text()='Verify your agency']]//button"
-                    const yAGCBtn = await driver.findElement(By.xpath(xpathYACBtn))
-                    await driver.executeScript("arguments[0].scrollIntoView(true);", yAGCBtn);
+                const btnProvideInfoCheck = await waitForElementOrTimeoutReg(driver, "(//in-progress-task-item//button[.//span[text()='Start task']])[1]", 1000, 8000)
+                if(!btnProvideInfoCheck) {
+                    const verifyYourAgency = await waitForElementOrTimeoutReg(driver, "//verification-task-list-item[.//span[text()='Get started'] and .//span[text()='Verify your agency']]", 1000, 4000)
+                    if (verifyYourAgency){
+                        const xpathYACBtn = "//verification-task-list-item[.//span[text()='Get started'] and .//span[text()='Verify your agency']]//button"
+                        const yAGCBtn = await driver.findElement(By.xpath(xpathYACBtn))
+                        await driver.executeScript("arguments[0].scrollIntoView(true);", yAGCBtn);
+                        await driver.sleep(500);
+                        await driver.executeScript("arguments[0].click();", yAGCBtn);
+                    }
+                }
+                else {
+                    const xpathProvideInfoBtn = "(//in-progress-task-item//button[.//span[text()='Start task']])[1]"
+                    const provideInfoBtn = await driver.findElement(By.xpath(xpathProvideInfoBtn))
+                    await driver.executeScript("arguments[0].scrollIntoView(true);", provideInfoBtn);
                     await driver.sleep(500);
-                    await driver.executeScript("arguments[0].click();", yAGCBtn);
+                    await driver.executeScript("arguments[0].click();", provideInfoBtn);
                 }
+                //-------------------Nhấn vào start verify--------------------------------
+                await driver.sleep(3000);
+                await driver.switchTo().defaultContent();
+                await driver.sleep(2000);
+                const checkNoti = await waitForElementOrTimeoutReg(driver, "//iframe[contains(@src, 'https://payments.google.com/gp/w/u/0/identityverification')]", 1000, 8000)
+                if (!checkNoti) {
+                    updateStatus = "Error"
+                    return
+                }
+
             }
             else {
-                const xpathProvideInfoBtn = "(//in-progress-task-item//button[.//span[text()='Start task']])[1]"
-                const provideInfoBtn = await driver.findElement(By.xpath(xpathProvideInfoBtn))
-                await driver.executeScript("arguments[0].scrollIntoView(true);", provideInfoBtn);
-                await driver.sleep(500);
-                await driver.executeScript("arguments[0].click();", provideInfoBtn);
+                //-------------------Nhấn vào start verify--------------------------------
+                await driver.sleep(3000);
+                await driver.switchTo().defaultContent();
+                await driver.sleep(2000);
+                const checkNoti = await waitForElementOrTimeoutReg(driver, "//iframe[contains(@src, 'https://payments.google.com/gp/w/u/0/identityverification')]", 1000, 8000)
+                if (!checkNoti) {
+                    updateStatus = "Error"
+                    return
+                }
             }
 
-            //-------------------Nhấn vào start verify--------------------------------
-            await driver.sleep(3000);
-            await driver.switchTo().defaultContent();
-            await driver.sleep(2000);
-            const checkNoti = await waitForElementOrTimeoutReg(driver, "//iframe[contains(@src, 'https://payments.google.com/gp/w/u/0/identityverification')]", 1000, 8000)
-            if (!checkNoti) {
-                updateStatus = "Error"
-                return
-            }
+
             // Chuyển vào iframe
             await driver.switchTo().frame(
                 await driver.findElement(By.xpath("//iframe[contains(@src, 'https://payments.google.com/gp/w/u/0/identityverification')]"))

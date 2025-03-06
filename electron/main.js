@@ -75,7 +75,7 @@ ipcMain.handle('edit-name-profile', async (event, id, name, apiUrl) => {
     try {
         const response = await axios.post(`${apiUrl}/api/v3/profiles/update/${id}`, {
             profile_name:name,
-        });
+        });e
 
        if (response.data.success){
            return response.data.success
