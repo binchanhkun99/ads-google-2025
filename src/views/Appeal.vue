@@ -1375,7 +1375,7 @@ onUnmounted(() => {
 
           <div class="form-group">
             <label>Tóm tắt vấn đề :</label>
-            <textarea placeholder="VD: Vấn đề là..." type="text" v-model="formData.exampleProblemSummary"/>
+            <textarea placeholder="VD: Vấn đề là..." type="text" v-model="formDataLimit.exampleProblemSummaryLimit"/>
           </div>
           <div class="buttons">
             <button class="p-4" @click="isPopupOpen = false">Đóng</button>

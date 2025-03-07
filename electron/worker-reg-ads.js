@@ -1098,7 +1098,6 @@ async function mainProcess(driver, formData, updateStatus) {
         }
         await driver.sleep(4000);
 
-
         const checkFirstReg = await waitForElementOrTimeoutReg(driver, "//div[contains(@class, 'ACCOUNT_ONBOARDING')]", 1000, 10000);
         if (!checkFirstReg) {
             updateStatus = "Error";
