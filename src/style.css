@@ -745,7 +745,7 @@ body {
 .cards.card {
     border-radius: 0 0 6px 6px;
     padding: 30px 20px;
-    height: 368px;
+    height: 338px;
     overflow-y: auto;
 }
 .cards.card::-webkit-scrollbar {

@@ -54,7 +54,9 @@ async function processLimitAppeal(driverPath, remoteDebuggingAddress, profileId,
         exampleBusinessServeLimit: lines[11] || '',
         exampleDescriptionBusinessLimit: lines[12] || '',
         exampleJustificationLimit: lines[13] || '',
-        exampleProblemSummaryLimit: lines[14] || ''
+        exampleProblemSummaryLimit: lines[14] || '',
+        exampleLinkImageLimit: lines[15] || ''
+
     };
     let driver;
     let updateStatus = "Success";

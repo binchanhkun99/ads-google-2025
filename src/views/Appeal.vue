@@ -353,7 +353,7 @@ const saveDataReg = async () => {
 };
 const saveDataLimit = async () => {
   isPopupOpen.value = true;
-  const dataToSave = Object.values(formDataReg.value).join("\n");
+  const dataToSave = Object.values(formDataLimit.value).join("\n");
   await window.electronAPI.invokeSaveFileLimit(dataToSave);
   isPopupOpen.value = false;
   notify({
