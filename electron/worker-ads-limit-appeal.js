@@ -320,6 +320,17 @@ async function processLimitAppeal(driverPath, remoteDebuggingAddress, profileId,
             const advertisingRadio =await driver.wait(until.elementLocated(By.xpath(xpathSelectAdvertising)), waitTime);
             await driver.executeScript("arguments[0].click();", advertisingRadio);
             await driver.sleep(1500);
+            //-------------------Chọn tên -------------------------
+            let xpathSelectYourName  =  `/html/body/div[2]/div/section/div/div/article/form/div[19]/fieldset//input[@aria-label='${formDataLimit.exampleYourOwnBusinessLimit}']`; // XPath của phần tử
+            await driver.executeScript(`
+                        const element = document.evaluate("${xpathSelectYourName}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                        if (element) {
+                            element.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
+                    `);
+            const yourNameRadio =await driver.wait(until.elementLocated(By.xpath(xpathSelectYourName)), waitTime);
+            await driver.executeScript("arguments[0].click();", yourNameRadio);
+            await driver.sleep(1500);
             //-------------------Nhập ngày thanh toán-------------------------
             const xpathDatePay = "/html/body/div[2]/div/section/div/div/article/form/div[21]/div/input"
             await driver.executeScript(`
