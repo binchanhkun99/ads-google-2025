@@ -382,12 +382,13 @@ async function processLimitAppeal(driverPath, remoteDebuggingAddress, profileId,
             // Tìm phần tử input file
             let fileInput = await driver.findElement(By.id('file_upload'));
             // Gửi đường dẫn file đến phần tử input file
-            const filePath = 'C:\\Users\\ADMIN\\Pictures\\Screenshots\\Screenshot 2024-05-12 151623.png';
-            await fileInput.sendKeys(filePath);
+            // const filePath = 'C:\\Users\\ADMIN\\Pictures\\Screenshots\\Screenshot 2024-05-12 151623.png';
+            await fileInput.sendKeys(formDataLimit.exampleLinkImageLimit);
             await driver.sleep(10000);
 
             //-------------------Nhập lời Vấn đề-------------------------
-            const xpathSummary  = "/html/body/div[2]/div/section/div/div/article/form/div[24]/div/textarea"
+
+            const xpathSummary  = "/html/body/div[2]/div/section/div/div/article/form/div[26]/div[1]/textarea"
             await driver.executeScript(`
                         const element = document.evaluate("${xpathSummary}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
                         if (element) {
@@ -397,7 +398,6 @@ async function processLimitAppeal(driverPath, remoteDebuggingAddress, profileId,
             const inputSummary = await driver.wait(until.elementLocated(By.xpath(xpathSummary)), waitTime);
             await enterTextIntoInput(driver, inputSummary, formDataLimit.exampleProblemSummaryLimit);
             await driver.sleep(1500);
-            //Bấm submit để hiện ô capcha
             //Chuyển iframe để giải capcha
             const checkCaptcha1 = await waitForElementOrTimeout(driver, "(//iframe[contains(@src, 'https://www.google.com/recaptcha/api2') and contains(@title, 'reCAPTCHA')])")
             if (checkCaptcha1) {
