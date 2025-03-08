@@ -456,7 +456,19 @@ async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, use
             await driver.sleep(2000);
 
             await driver.executeScript("location.reload()");
+            await driver.sleep(3000);
+
+            await waitForElementOrTimeout(driver, "//navigation-drawer-item[.//div[text()='Campaigns']]");
+            const dropdownCampXpath = "//navigation-drawer-item[.//div[text()='Campaigns']]"
+            const dropDownCampaignBtn = await driver.findElement(By.xpath(dropdownCampXpath));
+            await driver.executeScript("arguments[0].click();", dropDownCampaignBtn);
             await driver.sleep(2000);
+            const childCampXpath = "//navigation-drawer-item[.//div[text()='Campaigns']]"
+            const childCampaignBtn = await driver.findElement(By.xpath(childCampXpath));
+            await driver.executeScript("arguments[0].click();", childCampaignBtn);
+            await driver.sleep(2000);
+
+
             await waitForElementOrTimeout(driver, "//mat-checkbox[@aria-label='Select all rows']");
             // Bấm vào chọn tất cả----------------------
             const checkAllBtnXpath = "//mat-checkbox[@aria-label='Select all rows']"

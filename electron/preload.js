@@ -12,6 +12,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
     invokeSaveFileReg: (data) => ipcRenderer.invoke('save-file-reg', data),
     invokeEditNameProfile: (id, name, apiUrl) => ipcRenderer.invoke('edit-name-profile', id, name, apiUrl),
 
+    invokeReadFileShareAccount: () => ipcRenderer.invoke('read-file-share-account'),
+    invokeSaveFileShareAccount: (data) => ipcRenderer.invoke('save-file-share-account', data),
+    shareAccount: (dataJSON, numberThreads, apiUrl) => ipcRenderer.invoke('share-account', dataJSON, numberThreads, apiUrl),
+
+
+
+
     importExcelFile: () => ipcRenderer.invoke('import-excel-file'),
     readExcelSetup: () => ipcRenderer.invoke('read-excel-setup'),
     invokeReadId: () => ipcRenderer.invoke('read-id'),

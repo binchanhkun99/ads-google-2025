@@ -225,6 +225,7 @@ const formDataReg = ref({
   exampleTimeConnect: '',
   exampleProblemSummary: '',
 });
+const formShareAccount = ref('')
 
 const updateCurrentTime = () => {
   const now = new Date();
@@ -329,6 +330,25 @@ const setupAppealLimit = async () => {
   isLoading.value = false;
 };
 
+const setupShareAccount = async () => {
+  try{
+    activeTab.value = 'tab4'
+    isLoading.value = true;
+    const result = await window.electronAPI.invokeReadFileShareAccount();
+    if(result) {
+      formShareAccount.value = result;
+    }
+  }catch(error){
+    console.log(error);
+  }
+  finally {
+    isLoading.value = false;
+  }
+
+
+
+}
+
 const saveData = async () => {
   isPopupOpen.value = true;
   const dataToSave = Object.values(formData.value).join("\n");
@@ -355,6 +375,16 @@ const saveDataLimit = async () => {
   isPopupOpen.value = true;
   const dataToSave = Object.values(formDataLimit.value).join("\n");
   await window.electronAPI.invokeSaveFileLimit(dataToSave);
+  isPopupOpen.value = false;
+  notify({
+    type: 'success',
+    title: "Thành công",
+    text: "Lưu file setup thành công"
+  });
+};
+const saveDataShareAccount = async () => {
+  isPopupOpen.value = true;
+  await window.electronAPI.invokeSaveFileShareAccount(formShareAccount.value);
   isPopupOpen.value = false;
   notify({
     type: 'success',
@@ -670,6 +700,23 @@ const submitSelected = () => {
 const updateSelectAll = () => {
   selectAll.value = dataProfile.value.every(item => item.selected);
 };
+
+const shareAccount = async () => {
+  const selectedAccounts = dataProfile.value.filter(item => item.selected);
+  if (selectedAccounts.length <= 0) {
+    notify({
+      type: 'error',
+      title: "Lỗi",
+      text: "Vui lòng chọn tài khoản để chạy",
+    });
+    return;
+
+  }
+
+  const dataJSON = JSON.stringify(selectedAccounts);
+  await window.electronAPI.shareAccount(dataJSON, numberThreads.value, apiUrl.value);
+
+}
 // ----------------------REG ADS ACC
 
 const appealLimitAds = async () => {
@@ -736,6 +783,10 @@ onUnmounted(() => {
         <button class="button-85" @click="openPopup" role="button">Chạy Reg</button>
         <button class="p-4" style="background-color: #ffffff; color: #000000" @click="setup">Setup</button>
         <button class="p-4" style="background-color: #ffffff; color: #000000" @click="openMultipleProfile">Mở Profile</button>
+
+      </div>
+      <div class="user-box first-box">
+        <button class="button-85" @click="shareAccount" role="button">Share tài khoản</button>
 
       </div>
       <div class="user-box second-box">
@@ -913,119 +964,7 @@ onUnmounted(() => {
 
 
     </div>
-    <!-- Popup -->
-    <div v-if="isPopupOpen" class="popup-overlay">
-      <div class="popup">
-        <h2>Nhập thông tin</h2>
 
-        <!-- Input Fields -->
-        <div class="form-group">
-          <label>Tên công ty:</label>
-          <input type="text" placeholder="VD: Ovantin Company" v-model="formData.exampleCompanyName"/>
-        </div>
-
-        <div class="form-group">
-          <label>Trang web:</label>
-          <input placeholder="VD: https://hola.com.vn" v-model="formData.exampleWebsite"/>
-        </div>
-
-        <div class="form-group">
-          <label>Từ khóa:</label>
-          <input placeholder="VD: từ khóa 1, từ khóa 2" v-model="formData.exampleKeyWord"/>
-        </div>
-        <div class="form-group">
-          <label>Địa chỉ:</label>
-          <input placeholder="VD: Ngan Ha Strict" type="text" v-model="formData.exampleAddress"/>
-        </div>
-
-        <div class="form-group">
-          <label>Zip Code:</label>
-          <input placeholder="VD: 400001" v-model="formData.exampleZipCode"/>
-        </div>
-
-        <div class="form-group">
-          <label>Thành phố:</label>
-          <input placeholder="VD: Hà Nội" v-model="formData.exampleCity"/>
-        </div>
-        <div class="form-group">
-          <label>Quốc gia thanh toán:</label>
-          <input placeholder="VD: Vietnam" v-model="formData.exampleCityCountry"/>
-        </div>
-
-        <div class="form-group">
-          <label>Bạn có một hoặc nhiều tài khoản:</label>
-          <input type="number" placeholder="VD: 1" v-model="formData.exampleNumberAccount"/>
-        </div>
-
-        <div class="form-group">
-          <label>Bạn có đang quảng cáo doanh nghiệp của riêng bạn không?</label>
-          <input type="number" placeholder="VD: 1" v-model="formData.exampleAdsBusiness"/>
-        </div>
-        <div class="form-group">
-          <label>Ai là người thanh toán?:</label>
-          <textarea placeholder="VD: Trần Hoàng Luân" v-model="formData.exampleWhoPay"></textarea>
-        </div>
-
-        <div class="form-group">
-          <label>Tùy chọn thanh toán:</label>
-          <input v-model="formData.exampleSelectPayment"/>
-        </div>
-
-        <div class="form-group">
-          <label>Ngày thanh toán gần nhất:</label>
-          <input placeholder="VD: 21/08/2024" v-model="formData.exampleRecentDatePay"/>
-        </div>
-        <div class="form-group">
-          <label>Doanh nghiệp của bạn phục vụ (những) quốc gia nào?</label>
-          <input placeholder="VD: Vietnam" v-model="formData.exampleBusinessCountry"/>
-        </div>
-
-        <div class="form-group">
-          <label>Mô tả về doanh nghiệp:</label>
-          <textarea placeholder="VD: Doanh nghiệp của tôi..." v-model="formData.exampleDescrible"></textarea>
-        </div>
-
-
-        <div class="form-group">
-          <label> Thông tin về mối quan hệ giữa đại lý và khách hàng:</label>
-          <input placeholder="VD: Thông tin mối liên hệ...." v-model="formData.exampleRelationShip"/>
-        </div>
-        <div class="form-group">
-          <label>Chủ sở hữu miền:</label>
-          <input placeholder="VD: Tôi" type="text" v-model="formData.exampleOwnerDomain"/>
-        </div>
-        <div class="form-group">
-          <label>Chúng tôi có thể liên hệ với bạn bằng cách nào trong trường hợp chúng ta mất liên lạc?</label>
-          <input type="number" v-model="formData.exampleSelectConnect"/>
-        </div>
-
-
-        <div class="form-group" style="display: flex; gap: 6px">
-          <div>
-            <label>Đầu số:</label>
-            <input v-model="formData.examplePrefixPhoneNumber"/>
-          </div>
-          <div>
-            <label>SĐT:</label>
-            <input placeholder="VD: 983763541" v-model="formData.examplePhoneNumber"/>
-          </div>
-
-        </div>
-        <div class="form-group">
-          <label>Thòi gian thích hợp để liên hệ:</label>
-          <input placeholder="VD: Ngày mai" type="text" v-model="formData.exampleTimeConnect"/>
-        </div>
-        <div class="form-group">
-          <label>Tóm tắt vấn đề :</label>
-          <input placeholder="VD: Vấn đề là..." type="text" v-model="formData.exampleProblemSummary"/>
-        </div>
-        <!-- Buttons -->
-        <div class="buttons">
-          <button class="p-4" @click="isPopupOpen = false">Đóng</button>
-          <button class="p-4" @click="saveData" style="border: 1.5px solid #00a200;">Lưu</button>
-        </div>
-      </div>
-    </div>
     <!-- Popup -->
     <div v-if="isPopupOpen" class="popup-overlay">
       <div class="popup">
@@ -1035,14 +974,14 @@ onUnmounted(() => {
         <div class="tabs w-full">
           <button
               style="border-radius: 0 !important;"
-              class="w-1/2 text-center flex justify-center font-semibold"
+              class="w-1/2 text-center flex justify-center font-semibold text-xs"
               :class="{ active: activeTab === 'tab1' }"
               @click="activeTab = 'tab1'"
           >
             Setup Kháng
           </button>
           <button
-              class="w-1/2 text-center flex justify-center font-semibold"
+              class="w-1/2 text-center flex justify-center font-semibold text-xs"
               style="border-radius: 0 !important;"
               :class="{ active: activeTab === 'tab2' }"
               @click="setupReg"
@@ -1050,12 +989,20 @@ onUnmounted(() => {
             Setup Reg
           </button>
           <button
-              class="w-1/2 text-center flex justify-center font-semibold"
+              class="w-1/2 text-center flex justify-center font-semibold text-xs"
               style="border-radius: 0 !important;"
               :class="{ active: activeTab === 'tab3' }"
               @click="setupAppealLimit"
           >
-            Setup kháng limit
+            Setup limit 2$
+          </button>
+          <button
+              class="w-1/2 text-center flex justify-center font-semibold text-xs"
+              style="border-radius: 0 !important;"
+              :class="{ active: activeTab === 'tab4' }"
+              @click="setupShareAccount"
+          >
+            Setup Share Account
           </button>
         </div>
 
@@ -1382,6 +1329,16 @@ onUnmounted(() => {
             <button class="p-4" @click="saveDataLimit" style="border: 1.5px solid #00a200;">Lưu</button>
           </div>
 
+        </div>
+        <div v-if="activeTab === 'tab4'" class="tab-content">
+          <div class="form-group">
+            <label>Cung cấp mô tả ngắn gọn về doanh nghiệp của bạn  </label>
+            <textarea placeholder="VD: Danh sách mail cần share" v-model="formShareAccount"></textarea>
+          </div>
+          <div class="buttons">
+            <button class="p-4" @click="isPopupOpen = false">Đóng</button>
+            <button class="p-4" @click="saveDataShareAccount" style="border: 1.5px solid #00a200;">Lưu</button>
+          </div>
         </div>
 
         <!-- Buttons -->
