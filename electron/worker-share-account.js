@@ -179,6 +179,12 @@ async function processShareAccount(driverPath, remoteDebuggingAddress, profileId
                     const sendInviteBtn = await driver.findElement(By.xpath(sendInviteXpath));
                     await driver.executeScript("arguments[0].click();", sendInviteBtn);
                     await driver.sleep(2000);
+
+                    const checkShareFail = await waitForElementOrTimeout(driver, "//div[text()='The authenticated user does not have permission to make this change.']", 1000, 6000)
+                    if (checkShareFail) {
+                        updateStatus = "Error"
+                        return
+                    }
                 } else {
                     updateStatus = "Error";
                     return;
