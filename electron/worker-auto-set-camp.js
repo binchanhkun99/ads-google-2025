@@ -144,10 +144,10 @@ async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, use
                 await driver.executeScript("arguments[0].click();", campaignsCreateBtn);
                 await driver.sleep(1000);
 
-                const campaignsBtnConfirmCreateXPath = "//material-select-item[@aria-label=\"New campaign\"]";
+                const campaignsBtnConfirmCreateXPath = "//material-select-item[@aria-label='New campaign']";
                 const campaignsConfirmCreateBtn = await driver.findElement(By.xpath(campaignsBtnConfirmCreateXPath));
                 await actions.move({ origin: campaignsConfirmCreateBtn }).click().perform();
-                await driver.sleep(2000);
+                await driver.sleep(4000);
                 //Click skip
                 const skipXpath = "//button[.//span[contains(text(), 'Skip')]]";
                 await driver.executeScript(`
@@ -463,7 +463,7 @@ async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, use
             const dropDownCampaignBtn = await driver.findElement(By.xpath(dropdownCampXpath));
             await driver.executeScript("arguments[0].click();", dropDownCampaignBtn);
             await driver.sleep(2000);
-            const childCampXpath = "//navigation-drawer-item[.//div[text()='Campaigns']]"
+            const childCampXpath = "(//sidebar-panel[.//div[text()='Campaigns']])[2]"
             const childCampaignBtn = await driver.findElement(By.xpath(childCampXpath));
             await driver.executeScript("arguments[0].click();", childCampaignBtn);
             await driver.sleep(2000);
@@ -489,7 +489,7 @@ async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, use
             await driver.sleep(1500);
 
             // Bấm vào tạm dừng-------------------------
-            const pauseBtnXpath = "//material-select-item[.//span[@text='Pause']]"
+            const pauseBtnXpath = "//material-select-item[.//span[text()='Pause']]"
             const pauseBtn = await driver.findElement(By.xpath(pauseBtnXpath));
             await driver.executeScript("arguments[0].click();", pauseBtn);
             await driver.sleep(4000);
