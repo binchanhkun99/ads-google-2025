@@ -233,7 +233,9 @@ async function processAppeal(driverPath, remoteDebuggingAddress, profileId, user
 
             const elmClickListAccount = await driver.findElement(By.xpath(elmClickListAccountXPath));
 
-            await elmClickListAccount.click();
+            // await elmClickListAccount.click();
+            await driver.executeScript("arguments[0].click();", elmClickListAccount);
+
             await driver.sleep(3000);
             let xpathSelectAccount = `//button[.//div[text()='${item}']]`; // XPath của phần tử
             // Thực thi đoạn mã JavaScript để click vào phần tử
