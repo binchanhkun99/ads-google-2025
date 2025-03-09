@@ -46,7 +46,7 @@ function createWindow() {
             },
         ];
         const menu = Menu.buildFromTemplate(template);
-        Menu.setApplicationMenu(menu);  // Áp dụng menu vào ứng dụng
+        Menu.setApplicationMenu(null);  // Áp dụng menu vào ứng dụng
     } catch (e) {
         console.log(e)
     }
@@ -681,7 +681,7 @@ ipcMain.handle('check-live', async (event, dataJSON, numberThreads, apiUrl) => {
 
 ipcMain.handle('ads-appeal', async (event, dataJSON, numberThreads, apiUrl) => {
     const items = JSON.parse(dataJSON);
-    const MAX_CONCURRENT_WORKERS = numberThreads || 5; // Mặc định 5 luồng nếu không truyền `numberThreads`
+    const MAX_CONCURRENT_WORKERS = numberThreads || 5;
     const windowPositions = calculateWindowPositions(MAX_CONCURRENT_WORKERS);
     const workerQueue = async (tasks, maxConcurrent) => {
         const results = [];
