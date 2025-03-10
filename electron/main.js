@@ -46,7 +46,7 @@ function createWindow() {
             },
         ];
         const menu = Menu.buildFromTemplate(template);
-        Menu.setApplicationMenu(menu);  // Áp dụng menu vào ứng dụng
+        Menu.setApplicationMenu(null);  // Áp dụng menu vào ứng dụng
     } catch (e) {
         console.log(e)
     }
