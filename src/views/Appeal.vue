@@ -54,6 +54,7 @@ const readExcelFile = async () => {
   if (result.data && result.data.length > 0) {
     cardDataList.value = result.data;
     filePathReg.value = result.filePath;
+    console.log("result_________", result)
 
     Object.assign(formDataReg.value, result[0]);
   }

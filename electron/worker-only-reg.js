@@ -23,7 +23,8 @@ const {item, apiUrl, winPos} = workerData;
                 startResponse.data.data.driver_path,
                 startResponse.data.data.remote_debugging_address,
                 item.id,
-                item.name
+                item.name,
+                item.cardData
             );
         }
 
@@ -33,7 +34,7 @@ const {item, apiUrl, winPos} = workerData;
     }
 })();
 
-async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
+async function processReg(driverPath, remoteDebuggingAddress, profileId, user, cardData) {
     const filePath = path.join(__dirname, 'setup-reg.txt');
     if (!fs.existsSync(filePath)) {
         throw new Error("Missing setup-reg.txt");
@@ -48,12 +49,13 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user) {
         exampleOrganizationName: lines[4] || '',
         exampleLegalName: lines[5] || '',
         exampleZipcode: lines[6] || '',
-        exampleNumberCard: lines[7] || '',
-        exampleNameHolder: lines[8] || '',
-        exampleSecurityCode: lines[9] || '',
-        exampleMM: lines[10] || '',
-        exampleYY: lines[11] || '',
-
+        // Thông tin thẻ từ cardData
+        exampleNumberCard: cardData.exampleNumberCard || '',
+        exampleNameHolder: cardData.exampleNameHolder || '',
+        exampleSecurityCode: cardData.exampleSecurityCode || '',
+        exampleMM: cardData.exampleMM || '',
+        exampleYY: cardData.exampleYY || '',
+        exampleAddress: cardData.exampleAddress || '',
         exampleBusinessCountry: lines[12] || '',
         exampleDescrible: lines[13] || '',
         exampleRelationShip: lines[14] || '',

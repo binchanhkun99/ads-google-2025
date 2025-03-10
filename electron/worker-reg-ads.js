@@ -33,6 +33,7 @@ const {item, apiUrl, winPos} = workerData;
 })();
 
 async function processReg(driverPath, remoteDebuggingAddress, profileId, user, cardData) {
+    console.log("cardData_______", cardData)
     const filePath = path.join(__dirname, 'setup-reg.txt');
     if (!fs.existsSync(filePath)) {
         throw new Error("Missing setup-reg.txt");
