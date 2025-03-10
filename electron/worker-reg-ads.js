@@ -572,13 +572,16 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user, c
         await driver.executeScript(`
     const element = document.evaluate(arguments[0], document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
     if (element) {
-        element.value += arguments[1]; // Đặt giá trị mới
-        element.dispatchEvent(new Event('input', { bubbles: true })); // Gửi sự kiện 'input' nếu cần
+        element.value = ''; // Xóa giá trị cũ
+        element.dispatchEvent(new Event('input', { bubbles: true })); // Kích hoạt sự kiện input để cập nhật UI
+        element.value = arguments[1]; // Đặt giá trị mới
+        element.dispatchEvent(new Event('input', { bubbles: true })); // Kích hoạt sự kiện input sau khi nhập giá trị mới
         console.log('Đã nhập giá trị:', arguments[1]);
     } else {
         console.error('Không tìm thấy phần tử với XPath:', arguments[0]);
     }
 `, xpathNameCard, `${formData.exampleNameHolder}`);
+
         await driver.sleep(3000);
         //-----------------Nhấn vào Save card--------------
         const xpathBtnSaveCard = `//button[.//span[text()='Save card']]`;
