@@ -567,6 +567,19 @@ async function processReg(driverPath, remoteDebuggingAddress, profileId, user, c
     }
 `, xpathSecurity, `${formData.exampleSecurityCode}`);
         await driver.sleep(3000);
+        //-----------------Nhập Security code--------------
+        const xpathNameCard = "(//input[contains(@class, 'VfPpkd-fmcmS-wGMbrd')])[4]";
+        await driver.executeScript(`
+    const element = document.evaluate(arguments[0], document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    if (element) {
+        element.value += arguments[1]; // Đặt giá trị mới
+        element.dispatchEvent(new Event('input', { bubbles: true })); // Gửi sự kiện 'input' nếu cần
+        console.log('Đã nhập giá trị:', arguments[1]);
+    } else {
+        console.error('Không tìm thấy phần tử với XPath:', arguments[0]);
+    }
+`, xpathNameCard, `${formData.exampleNameHolder}`);
+        await driver.sleep(3000);
         //-----------------Nhấn vào Save card--------------
         const xpathBtnSaveCard = `//button[.//span[text()='Save card']]`;
         const btnSaveCard = await driver.findElement(By.xpath(xpathBtnSaveCard));
