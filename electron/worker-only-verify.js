@@ -161,7 +161,8 @@ async function processVeri(driverPath, remoteDebuggingAddress, profileId, user) 
             }
             else {
                 const billingBtn = await driver.findElement(By.xpath(billingBtnXPath));
-                await billingBtn.click();
+                await driver.executeScript("arguments[0].click()", billingBtn)
+
                 await driver.sleep(3500);
                 //-------------------Bấm vào verify ad--------------------------------
                 const advertiserBtnXPath = "//a[.//div[text()='Advertiser verification']]";

@@ -126,9 +126,26 @@
               </td>
               <td class="px-4 py-3 text-lg whitespace-nowrap">
                 <div class="flex items-center space-x-1">
-                  <div class="w-2 h-2 rounded-full bg-green-500"></div>
-                  <span>{{ profile.status || 'Sẵn sàng' }}</span>
-                </div>
+                  <div v-if="profile.name.includes('Success')" class="w-2 h-2 rounded-full bg-green-500"></div>
+                  <div v-else-if="profile.name.includes('Error')" class="w-2 h-2 rounded-full bg-red-500"></div>
+                  <div v-else-if="profile.name.includes('Pending')" class="w-2 h-2 rounded-full bg-gray-500"></div>
+                  <div v-else class="w-2 h-2 rounded-full bg-gray-500"></div>
+
+                  <div>
+                    <div v-if="profile.name.includes('Success')" class="status is-green">
+                      Thành công
+                    </div>
+                    <div v-else-if="profile.name.includes('Error')" class="status is-red">
+
+                      Lỗi
+                    </div>
+                    <div v-else-if="profile.name.includes('Pending')" class="status is-wait">
+
+                      Đang chờ
+                    </div>
+                    <p v-else style="color: green">
+                      Đã login</p>
+                  </div>                </div>
               </td>
               <td class="px-4 py-3 truncate" :title="profile.raw_proxy || 'Local IP'">
                 {{ profile.raw_proxy || 'Local IP' }}
