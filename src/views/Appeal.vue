@@ -632,6 +632,7 @@ async function checkLive() {
   if (result.success) {
     // Gọi API khác nếu cần
     await callAPI(idGroup.value);
+    console.log("result", result.data)
     // Duyệt qua kết quả trả về và cập nhật vào dataProfile
     result.data.forEach((itemChecked) => {
       // Tìm profile theo ID

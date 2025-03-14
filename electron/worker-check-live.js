@@ -1,26 +1,16 @@
-const {parentPort, workerData} = require('worker_threads');
+const { parentPort, workerData } = require('worker_threads');
 const axios = require('axios');
-const {Builder, By, until} = require('selenium-webdriver');
+const { Builder, By, until } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
 
-// Hàm chờ tìm element với timeout
-const waitForElementOrTimeout = async (driver, xpath, timeout = 5000) => {
-    try {
-        const element = await driver.wait(until.elementLocated(By.xpath(xpath)), timeout);
-        return element;
-    } catch (e) {
-        return null;
-    }
-};
-
-async function waitForElementOrTimeoutReg(driver, xpath, interval = 1000, timeout = 6000) {
+async function waitForElementOrTimeout(driver, xpath, interval = 1000, timeout = 6000) {
     let elapsedTime = 0;
     let foundElements = [];
 
     while (elapsedTime < timeout) {
         foundElements = await driver.findElements(By.xpath(xpath));
         if (foundElements.length > 0) {
-            return foundElements; // Trả về nếu tìm thấy phần tử
+            return true; // Trả về nếu tìm thấy phần tử
         }
 
         await driver.sleep(interval); // Chờ một khoảng thời gian trước khi thử lại
@@ -28,10 +18,11 @@ async function waitForElementOrTimeoutReg(driver, xpath, interval = 1000, timeou
     }
     return null; // Trả về kết quả cuối cùng (rỗng nếu không tìm thấy)
 }
-const {apiUrl, winPos} = workerData
+
+const { apiUrl, winPos } = workerData;
 // Hàm chính trong worker
 const checkProfile = async (item) => {
-    let result = {id: item.id, email: item.name, status: "Pending", data: []};
+    let result = { id: item.id, email: item.name, status: "Pending", data: [] };
     let driver;
 
     try {
@@ -57,7 +48,6 @@ const checkProfile = async (item) => {
             '--disable-cache', // Tắt cache
             '--disk-cache-size=0', // Đặt kích thước cache trên ổ đĩa về 0
             '--media-cache-size=0' // Đặt kích thước cache media về 0
-
         );
 
         const service = new chrome.ServiceBuilder(startResponse.data.data.driver_path);
@@ -68,7 +58,7 @@ const checkProfile = async (item) => {
             .build();
 
         await driver.get("https://ads.google.com/nav/selectaccount");
-        await driver.sleep(2000)
+        await driver.sleep(2000);
         // Lấy handle của tab hiện tại
         let originalTab = await driver.getWindowHandle();
 
@@ -89,9 +79,7 @@ const checkProfile = async (item) => {
 
         // Chuyển về tab mới (tab còn lại)
         await driver.switchTo().window(handles[1]);
-        await driver.sleep(2000)
-
-
+        await driver.sleep(2000);
 
         await driver.manage().addCookie({
             name: 'AdsUserLocale',
@@ -102,26 +90,64 @@ const checkProfile = async (item) => {
             sameSite: 'Strict'
         });
         // Tải lại trang để cookie có hiệu lực
-        await driver.executeScript("location.reload()")
-
+        await driver.executeScript("location.reload()");
         await driver.sleep(5000);
 
         const ElmListAccount = await driver.findElements(By.xpath('//material-list-item[contains(@class, "user-customer-list-item")]'));
         for (let i = 0; i < ElmListAccount.length; i++) {
             const spanElement = await driver.findElement(By.xpath(`(//material-list-item[contains(@class, "user-customer-list-item")])[${i + 1}]/span[1]`));
             const spanValue = await spanElement.getText();
-            let account = {id: spanValue, status: "active"};
+            let account = { id: spanValue, status: "active" }; // Khởi tạo account
 
             const btnSelect = await driver.findElement(By.xpath(`(//material-list-item[contains(@class, "user-customer-list-item")])[${i + 1}]`));
             await btnSelect.click();
             await driver.sleep(5000);
 
-            const isBanAds = await waitForElementOrTimeoutReg(driver, '//div[contains(@class, "notification-container") and contains(@class, "red-bar") and .//span[text()="Your account is suspended"]]', 1000, 4000);
-            if (isBanAds) {
-                account.status = "inactive";
-            } else account.status = "active";
+            // Kiểm tra ngay từ đầu xem tài khoản đã bị suspend chưa
+            const initialBanCheck = await waitForElementOrTimeout(
+                driver,
+                '//div[contains(@class, "notification-container") and contains(@class, "red-bar") and .//span[text()="Your account is suspended"]]',
+                1000,
+                4000
+            );
+            if (initialBanCheck) {
+                account.status = "inactive"; // Nếu đã suspend từ đầu, set inactive và không click
+            } else {
+                // Chỉ click nếu chưa bị suspend từ đầu
+                while (true) {
+                    const buttonXPath = '(//material-button[contains(@class, "nav-button")])[2]';
+                    await waitForElementOrTimeout(driver, buttonXPath, 1000, 50000);
+                    const button = await driver.findElement(By.xpath(buttonXPath));
 
+                    const isDisabled = await button.getAttribute('disabled');
+                    if (isDisabled === 'true' || isDisabled === true) {
+                        console.log('Button is disabled, stopping process');
+                        break;
+                    }
+                    await button.click();
+                    await driver.sleep(2000);
+
+                    const isBanAds = await waitForElementOrTimeout(
+                        driver,
+                        '//div[contains(@class, "notification-container") and contains(@class, "red-bar") and .//span[text()="Your account is suspended"]]',
+                        1000,
+                        4000
+                    );
+                    console.log(isBanAds);
+                    // Cập nhật trạng thái cuối cùng cho account
+                    account.status = isBanAds ? "inactive" : "active";
+                    if (isBanAds) {
+                        console.log('Account is suspended, stopping clicks');
+                        break; // Dừng click ngay nếu phát hiện inactive
+                    }
+
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+            }
+
+            // Đẩy account vào result.data sau khi kiểm tra xong
             result.data.push(account);
+
             await driver.get("https://ads.google.com/nav/selectaccount");
             await driver.sleep(5000);
         }

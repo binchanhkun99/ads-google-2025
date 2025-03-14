@@ -150,17 +150,21 @@ async function processSetCamp(driverPath, remoteDebuggingAddress, profileId, use
                 await driver.sleep(4000);
                 //Click skip
                 const skipXpath = "//button[.//span[contains(text(), 'Skip')]]";
-                await driver.executeScript(`
+                const checkSkip = await waitForElementOrTimeout(driver, skipXpath);
+                if(checkSkip) {
+                    await driver.executeScript(`
                         const element = document.evaluate("${skipXpath}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
                         if (element) {
                             element.scrollIntoView({ behavior: "smooth", block: "center" });
                         }
                     `);
-                await driver.sleep(4000);
+                    await driver.sleep(4000);
 
-                const skipBtn = await driver.findElement(By.xpath(skipXpath));
-                await driver.executeScript("arguments[0].click();", skipBtn);
-                await driver.sleep(2000);
+                    const skipBtn = await driver.findElement(By.xpath(skipXpath));
+                    await driver.executeScript("arguments[0].click();", skipBtn);
+                    await driver.sleep(2000);
+                }
+
             }
             else if(checkCanCreateCamp2){
                 //Click tạo mới chiến dịch
